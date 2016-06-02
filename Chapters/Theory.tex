@@ -1,0 +1,81 @@
+\chapter{Theoretical Background}
+The aim of this thesis is to produce a computer program that plays \acl{MR}
+well. This problem statement suffices for most communication purposes, but does
+not give us enough understanding to reason about the problem and find ways to
+solve it. We first need to develop a formal definition of all the notions: ``to
+play'', ``\acl{MR}'' and ``well''. Fortunately, most of the required work has
+already been done, by other authors.
+
+In this chapter we will define a mathematical model for the problem we are
+facing. We will also formally define the algorithms we will use to tackle it,
+without concerning ourselves with the details of their implementation on our
+computing environment.
+
+\section{\aclp{SDP}}
+Let us describe the \acf{SDP} model of
+\cite[Section~3.1]{sutton1998introduction}. There is an \emph{agent} that, every
+\emph{time step}, takes an \emph{action} in the \emph{environment}. The
+environment is a process that has a \emph{state}. When the agent takes an
+action, the environment's state changes. The agent also receives a \emph{reward}
+when it takes an action.
+
+More formally. There is a series of discrete time steps, $t=0,1,2,3,\dots$, in
+which the agent and the environment interact. At time step $t$, environment is
+in state $s_t \in \mathcal{S}$. $\mathcal{S}$ is the finite, but usually very
+large, set of possible states. The agent takes an action $a_t$ from the set of
+possible actions in the state, $a_t \in \mathcal{A}(s_t)$. In the next time
+step, the agent receives a numerical reward $r_{t+1} \in \mathfrak{R}$, and the
+environment transitions to a new state $s_{t+1} \in \mathcal{S}$.
+
+The environment defines the set of possible states $\mathcal{S}$, the possible
+actions in each state $\mathcal{A}$, the reward for each state $\mathcal{S}$ and
+the rules for transitioning to the new state in each time step. The agent simply
+chooses the action $a_t$ in each time step. The interaction between agent and
+environment is illustrated in figure \ref{fig:agent-environment}.
+
+\inkscapefig{agent-environment}{Diagram of interaction between agent and
+  environment \cite{sutton1998introduction}}
+
+This model is really flexible. It does not constrain time steps to have the same
+length, so each can represent a decision branching point and not actual time. An
+example of this can be observed in go, chess, poker and others, where each move
+takes a different amount of wall clock time.
+
+The model also accepts different abstraction levels of states and actions: in a
+video game, they can be raw pixel data and controller input, or entity position
+representation and moving to a certain screen. This idea is the basis of
+hierarchical reinforcement learning, which is explained in section
+\ref{section:hierarchical-rl}.
+
+It is important to understand that the agent is only the \emph{process} that
+\emph{decides} actions, not a physical object or entity. In the case of a robot, the
+agent is only the controlling program: the actuators, mechanisms and sensors are part
+of the environment. In the case of a video game, the code that emulates
+the world and accepts controls is the environment, and the code that trains a
+model or plans actions is the agent. This is the case even if the actions to be
+taken are high-level, and not settings of force or torque on actuators or
+muscles.
+
+Observe also that the reward is usually computed by the agent process itself,
+rather than given by the environment as the model description implies. However,
+in our formal model it is external to the agent, because the agent cannot change
+the reward function.
+
+This model maps to all the notions we needed: ``\acl{MR}'' is the environment,
+``to play'' is to run the process so that the agent chooses actions, and
+``well'' is maximising the reward.
+
+\subsection{\aclp{MDP}}
+The \ac{SDP} formalism is not really used in practice. \acf{MDP}, which are a
+restricted case of \ac{SDP}, are used instead.
+
+A \acl{MDP} is a \acl{SDP} that follows the Markov property
+(\cite[Section~3.5]{sutton1998introduction}). $s_{t+1} = \mathcal{P}(s_t, a_t)$
+
+\section{Reinforcement Learning}
+\section{Sarsa}
+\section{Hierarchical Reinforcement Learning\label{section:hierarchical-rl}}
+Theory about MAXQ and its application to the task we decomposed
+s
+\section{Learning while evaluating a different policy}
+\section{Iterated Width}

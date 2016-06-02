@@ -1,21 +1,13 @@
-\documentclass[12pt,a4paper,oneside]{report}
-\usepackage{setspace}
-% 1.5 line spacing
-\setstretch{1.5}
-\usepackage{amssymb,amsmath}
-\usepackage{graphicx}
-\usepackage{eufrak}
-\usepackage{calc}
+\documentclass[12pt,a4paper,twoside]{report}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-% use upquote if available, for straight quotes in verbatim environments
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
-% use microtype if available
-\IfFileExists{microtype.sty}{%
+\usepackage{setspace}
+\usepackage{amssymb,amsmath}
+\usepackage{graphicx}
+\usepackage{eufrak} % mathfrak font
+\usepackage{upquote} % quotes in verbatim environments
 \usepackage{microtype}
-\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
-}{}
-\usepackage[tmargin=3cm, lmargin=2.5cm, rmargin=2.5cm, bmargin=3cm]{geometry}
+\usepackage[tmargin=3cm, lmargin=3cm, rmargin=3cm, bmargin=3cm]{geometry}
 \usepackage{hyperref}
 \usepackage{import}
 \PassOptionsToPackage{usenames,dvipsnames}{color} % color is loaded by hyperref
@@ -26,174 +18,70 @@
             urlcolor=blue,
             breaklinks=true}
 \urlstyle{same}  % don't use monospace font for urls
-\IfFileExists{parskip.sty}{%
 \usepackage{parskip}
-}{% else
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt plus 2pt minus 1pt}
-}
-\setlength{\emergencystretch}{3em}  % prevent overfull lines
-\providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
-\setcounter{secnumdepth}{0}
-% Redefines (sub)paragraphs to behave more like sections
-\ifx\paragraph\undefined\else
-\let\oldparagraph\paragraph
-\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
-\fi
-\ifx\subparagraph\undefined\else
-\let\oldsubparagraph\subparagraph
-\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
-\fi
+\setlength{\emergencystretch}{3em}
 
-%% BIBTEX
+\usepackage{fancyhdr}
+\lhead[\rm\thepage]{\fancyplain{}{\sl{\rightmark}}}
+\rhead[\fancyplain{}{\sl{\leftmark}}]{\rm\thepage}
+\chead{}\lfoot{}\rfoot{}\cfoot{}
+\pagestyle{fancy}
+
+%% Bibtex
 \usepackage{csquotes}
 \usepackage[nottoc,numbib]{tocbibind}
 \usepackage[style=authoryear,bibencoding=ascii,backend=bibtex]{biblatex}
 \addbibresource{report.bib}
 
-%% CUSTOM COMMANDS
-\newcommand{\centeredtitle}[1]{\begin{center} \large{#1}
-    \addcontentsline{toc}{chapter}{#1} \end{center}}
+%% Inkscape pdf_tex pictures
+\usepackage{calc}
+\def\svgscale{1}
+\newcommand{\inkscapefig}[2]{
+\begin{figure}[hbtp]
+\begin{center}
+  \subimport{img/}{#1.pdf_tex}
+\end{center}
+\caption{#2\label{fig:#1}}
+\end{figure}
+}
 
-%% DOCUMENT
-\author{Adrià Garriga}
-\title{Solving Montezuma's Revenge with planning and reinforcement learning}
+\newcommand{\centeredtitle}[1]{\begin{center} {\Huge \textbf{#1}}
+    \addcontentsline{toc}{chapter}{#1} \end{center}\bigskip}
+
+\input{Content/Acronyms.tex}
 
 \begin{document}
 \pagenumbering{roman}
-\maketitle
+\input{Content/Title.tex}
+\onehalfspacing
+\input{Content/Acknowledgements.tex}
+\input{Content/Abstract.tex}
 
+\pagestyle{fancy}
 \newpage
-\vfill
-\centeredtitle{Acknowledgements}
-My supervisor Anders Jonsson, for the patience and understanding showed
-
-My good friend Daniel Furelos, for the patience and help
-
-My family who allowed me to turn my room into a computing center
-\vfill
-
-\newpage
-\vfill
-\centeredtitle{Abstract}
-
-Traditionally, methods for solving sequential decision processes (SDPs) have not
-worked well with those that feature sparse feedback. Both planning and
-reinforcement learning, methods for solving SDPs, have trouble with sparse
-feedback.
-
-With the rise to prominence of the Arcade Learning Environment (ALE) in the
-broader research community of sequential decision processes, one SDP featuring
-sparse feedback has become familiar: the Atari game Montezuma's Revenge. In this
-particular game, the great amount of knowledge the human player already
-possesses, and uses to find rewards, cannot be bridged by blindly exploring in a
-realistic time.
-
-We apply planning, hierarchical reinforcement learning and hybrid approaches,
-combined with domain knowledge, to enable an agent to obtain better scores in
-this game.
-
-We hope that these domain-specific algorithms can inspire better approaches to
-solve SDPs with sparse feedback in general.
-\vfill
-
-
-\newpage
+\lhead{Contents}
 \tableofcontents
 \newpage
+\lhead{List of Figures}
 \listoffigures
 \newpage
+\lhead{List of Tables}
 \listoftables
 \newpage
+\lhead{Abbreviations}
+\addcontentsline{toc}{chapter}{Abbreviations}
+\thispagestyle{empty}
+\printacronyms[include-classes=abbrev,name=Abbreviations,heading=chapter*]
+
 \pagenumbering{arabic}
 
-\chapter{Introduction}
-  \section{Context}
-  Very short history of sequential decision processes AI. Talk about Deepmind DQN Atari ,and the rise to ``fame'' of montezuma's revenge
-  \section{Problem}
-   the problem of sparse feedback in RL and planning, and that we tackle this one game  to try and learn something from it
-  
-
-\chapter{Related Work}
-  the very related Hierarchical Deep Reinforcement Learning: Integrating Temporal Abstraction and Intrinsic Motivation
-
-  DeepMind's Human-level control in Atari games, 
-
-  Maybe Dani's TFG
-
-\chapter{Theoretical Background}
-The aim of this thesis is to produce a computer program that plays Montezuma's
-Revenge well. This problem statement suffices for most communication purposes,
-but does not give us enough understanding to reason about the problem and find
-ways to solve it. We first need to develop a formal definition of all the
-notions: ``to play'', ``Montezuma's Revenge'' and ``well''. Fortunately, most of
-the required work has already been done, by other authors.
-
-In this chapter we will define a mathematical model for the problem we are
-facing. We will also formally define the algorithms we will use to tackle it,
-without concerning ourselves with the details of their implementation on our
-computing environment.
-
-\section{Sequential Decision Process}
-Let us describe the Sequential Decision Process (SDP) model. There is an
-\emph{agent} that, every \emph{time step}, takes an \emph{action} in the
-\emph{environment}. The environment is a process that has a \emph{state}. When
-the agent takes an action, the environment's state changes. The agent also
-receives a \emph{reward} when it takes an action.
-
-More formally. There is a series of discrete time steps, $t=0,1,2,3,\dots$, in
-which the agent and the environment interact. At time step $t$, environment is
-in state $s_t \in \mathcal{S}$. $\mathcal{S}$ is the finite, but usually very
-large, set of possible states. The agent takes an action $a_t$ from the set of
-possible actions in the state, $a_t \in \mathcal{A}(s_t)$. In the next time
-step, the agent receives a numerical reward $r_{t+1} \in \mathfrak{R}$, and the
-environment transitions to a new state $s_{t+1} \in \mathcal{S}$.
-
-The environment defines the set of possible states $\mathcal{S}$, the possible
-actions in each state $\mathcal{A}$, the reward for each state $\mathcal{S}$ and
-the rules for transitioning to the new state in each time step. The agent simply
-chooses the action $a_t$ in each time step. The interaction between agent and
-environment is illustrated in figure \ref{fig:agent-environment}.
-
-\begin{figure}[hbtp]
-\begin{center}
-  \def\svgscale{1}
-  \subimport{img/}{agent-environment.pdf_tex}
-\end{center}
-\caption{Diagram of interaction between agent and environment
-  \cite{sutton1998introduction}\label{fig:agent-environment}}
-
-\end{figure}
-
-\
-
-
-\section{Reinforcement Learning}
-\section{Sarsa}
-\section{Hierarchical Reinforcement Learning}
-Theory about MAXQ and its application to the task we decomposed
-\section{Learning while evaluating a different policy}
-\section{Iterated Width}
-
-\chapter{Experiments}
-\section{Reverse-engineering Montezuma's Revenge}
-
-\chapter{Approaches}
-Include failed approaches or only successful ones?
-
-
-
-\chapter{Conclusions and Future Work}
-  \section{Conclusions}
-  That a little domain knowledge can go very far
-  \section{Future work}
-  How we can generalize the results obtained here to other sparse-feedback MDPs.
-  Discuss the possible meta-learner
+\input{Chapters/Introduction.tex}
+\input{Chapters/Theory.tex}
+\input{Chapters/Experiments.tex}
+\input{Chapters/Conclusions.tex}
 
 \newpage
+\thispagestyle{empty}
+\addcontentsline{toc}{chapter}{Bibliography}
 \printbibliography
-
 \end{document}
-
-Provar d'anar cap a estats no visitats

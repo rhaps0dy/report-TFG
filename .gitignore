@@ -1,3 +1,5 @@
+!report.tex
 report.*
-prv_report.log
+*.log
 report-blx.bib
+.DS_Store

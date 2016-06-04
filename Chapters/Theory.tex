@@ -12,8 +12,8 @@ without concerning ourselves with the details of their implementation on our
 computing environment.
 
 \section{\aclp{SDP}}
-Let us describe the \acf{SDP} model of
-\cite[Section~3.1]{sutton1998introduction}. There is an \emph{agent} that, every
+Let us describe the \acf{SDP} model from
+(\cite[Section~3.1]{sutton1998introduction}). There is an \emph{agent} that, every
 \emph{time step}, takes an \emph{action} in the \emph{environment}. The
 environment is a process that has a \emph{state}. When the agent takes an
 action, the environment's state changes. The agent also receives a \emph{reward}
@@ -28,18 +28,20 @@ step, the agent receives a numerical reward $r_{t+1} \in \mathfrak{R}$, and the
 environment transitions to a new state $s_{t+1} \in \mathcal{S}$.
 
 The environment defines the set of possible states $\mathcal{S}$, the possible
-actions in each state $\mathcal{A}$, the reward for each state $\mathcal{S}$ and
-the rules for transitioning to the new state in each time step. The agent simply
-chooses the action $a_t$ in each time step. The interaction between agent and
-environment is illustrated in figure \ref{fig:agent-environment}.
+actions in each state $\mathcal{A}(s)$, the reward for each state $\mathcal{S}$
+and the rules for transitioning to the new state in each time step. The agent
+simply chooses the action $a_t$ in each time step. The interaction between agent
+and environment is illustrated in figure \ref{fig:agent-environment}.
 
 \inkscapefig{agent-environment}{Diagram of interaction between agent and
-  environment \cite{sutton1998introduction}}
+  environment (\cite[Section~3.1]{sutton1998introduction})}
 
 This model is really flexible. It does not constrain time steps to have the same
 length, so each can represent a decision branching point and not actual time. An
 example of this can be observed in go, chess, poker and others, where each move
-takes a different amount of wall clock time.
+takes a different amount of wall clock time. It is also not constrained how a new
+state is chosen after an action: it may depend on anything, maybe even be
+stochastic and not deterministic.
 
 The model also accepts different abstraction levels of states and actions: in a
 video game, they can be raw pixel data and controller input, or entity position
@@ -61,16 +63,124 @@ rather than given by the environment as the model description implies. However,
 in our formal model it is external to the agent, because the agent cannot change
 the reward function.
 
-This model maps to all the notions we needed: ``\acl{MR}'' is the environment,
-``to play'' is to run the process so that the agent chooses actions, and
-``well'' is maximising the reward.
+The model so far maps to two the notions we needed: ``\acl{MR}'' is the environment,
+``to play'' is to run the process so that the agent chooses actions.
+\subsection{Considerations and characteristics of \acp{SDP}}
+We may also call an \ac{SDP} a \emph{task}, when we are emphasising its nature
+as a problem that the agent has to solve.
+
+In this whole work we assume all \aclp{SDP} are \emph{fully observable}. That
+is, the agent's sensations fully determine which state the environment is in. In
+general, that may not be the case. However, the formally defined notions cover
+only this case.
+
+\subsubsection{Finite and infinite \acp{SDP}}
+An \ac{SDP} is \emph{finite} if the set of states $\mathcal{S}$ and the set of possible
+values of the action function, $\lbrace \mathcal{A(s)} | s \in \mathcal{S}
+\rbrace$, are finite. Otherwise, it is \emph{infinite}. We will treat only
+finite \acp{SDP} in this work.
+
+\subsubsection{Episodic and continuing \acp{SDP}}
+Sometimes it makes sense to divide a task in non-overlapping continued
+interactions between the agent and environment. Such tasks are called
+\emph{episodic}, and they have one final time step. In contrast,
+\emph{continuing} tasks never stop, in theory.
+(\cite[Section~3.3]{sutton1998introduction})
+
+\subsubsection{Deterministic and stochastic \acp{SDP}}
+We have not yet mentioned how the next state of an \ac{SDP} is determined. In
+general, the next state is drawn from a probability distribution over all
+possible states $\mathcal{S}$, that depends on the past history of actions,
+states and rewards.
+
+Sometimes, the probability distribution has all its weight on a single
+state, that is, the next state is a function of the previous history of the
+process. Such \acp{SDP} are called \emph{deterministic}. When a \ac{SDP} is not
+deterministic, it is \emph{stochastic}.
+
+\subsection{Returns}
+What is to play ``well''? The agent's goal is, informally, to maximise the rewards it
+gets. In general, we maximise the expected future reward at any time step,
+that is, the expected \emph{return} at time $t$, $R_t$.
+We could simply define $R_t$ as the sum of all rewards until the last time step, $T$:
+\begin{equation}
+  R_t = r_{t+1} + r_{t+2} + \dots + r_T
+  \label{undiscounted-reward}
+\end{equation}
+
+However, we may be faced with a continuing task, and the final time step may be
+infinity. We could very well be faced with infinite return for each action.
+If we want to pick the action with maximal return, and all actions have an
+infinite return, we are forced to pick one at random.
+
+Instead, we use a more general notion, that of \emph{discounted return}:
+\begin{equation}
+  R_t = r_{t+1} + \gamma r_{t+2} + \gamma^2 r_{t+3} + \dots = \sum_{k=0}^\infty
+\gamma^k r_{t+k+1}
+\end{equation}
+Where $\gamma$, the \emph{discount rate}, is a parameter, $0 \leq \gamma \leq
+1$. Observe that, if $\gamma=1$, the return is simply the sum of all rewards, as
+in equation \ref{undiscounted-reward}. If $\gamma<1$, however, we solve our
+infinite return problem: as the time step approaches infinity, the weight its
+reward is scaled by approaches zero, and $R_t$ converges.
+(\cite[Subsection~17.1.1]{russell2009aima})
 
 \subsection{\aclp{MDP}}
-The \ac{SDP} formalism is not really used in practice. \acf{MDP}, which are a
-restricted case of \ac{SDP}, are used instead.
+The \ac{SDP} formalism is not really used in practice. \acfp{MDP}, which are a
+restricted case of \acp{SDP}, are used instead.
 
-A \acl{MDP} is a \acl{SDP} that follows the Markov property
-(\cite[Section~3.5]{sutton1998introduction}). $s_{t+1} = \mathcal{P}(s_t, a_t)$
+In general, the next state of an \ac{SDP} may depend on all the past states,
+actions and rewards. A \acl{MDP} is a \acl{SDP} that follows the Markov property
+(\cite[Section~3.5]{sutton1998introduction},
+\cite[Section~17.1]{russell2009aima}), defined as follows.
+
+\begin{equation}
+  P \lbrace s_{t+1} = s, r_{t+1} = r | s_t,a_t,r_t,s_{t-1},a_{t-1}, \dots, r_1, s_0, a_0 \rbrace =
+  P \lbrace s_{t+1} = s, r_{t+1} = r | s_t,a_t \rbrace
+\end{equation}
+
+That is, for all $s\in\mathcal{S}$ and $r\in\mathfrak{R}$, the probability that
+in the next step the state is $s$ and the reward is $r$ is the same, whether
+conditioned on the whole history of past states, actions and rewards, or
+conditioned only on the current state and action. More concisely, the
+probability distribution over the next possible states and rewards depends only
+on the current state and action.
+
+This property enables us to develop agents that choose an action
+based only on the current state: in any \ac{MDP}, this decision is just as good as
+considering all past states, actions and rewards.
+
+Additionally, algorithms and additional theory developed on top of \acp{MDP} can
+be easily adapted to any \ac{SDP}. Turning an \ac{SDP} into an \ac{MDP} is
+trivial: let the state $s'_t$ of the \ac{MDP} be the sequence of current and
+previous states, actions and rewards of the SDP, $s_t,a_t,r_t,s_{t-1},\dots,s_n$. If the
+\ac{SDP} depends on all of its history $n=0$, otherwise we can take data until
+$n=t-m$. Indeed, the latter, excluding rewards, is the approach taken in
+\cite{mnih2015human}, \cite{kulkarni2016hierarchical} and this thesis.
+
+It is also possible for the state to encode an abstracted representation of the
+past actions and sensations. A repairer agent includes in its state the size of
+the screwdriver it grabbed a few seconds ago, not the sensations, actions and
+rewards it had while performing such task.
+
+We usually specify an \ac{MDP} task with the tuple $\langle \mathcal{S}, \mathcal{A},
+\mathcal{P}^a_{ss'}, \mathcal{R}^a_{ss'}, \gamma \rangle$:
+(\cite[Section~3.6]{sutton1998introduction}, \cite[Section~2.3]{blanco2015tfg})
+\begin{itemize}
+\item The set of possible states, $\mathcal{S}$.
+\item The available actions for each state, as a function of the state, $\mathcal{A}(s)$.
+\item The matrix of transition probabilities from each state to another, given
+  an action, $\mathcal{P}^a_{ss'} = P(s_{t+1}=s' | s_t=s, a_t=a)$.
+\item The expected reward given a state, an action and the next state,
+ $\mathcal{R}^a_{ss'} = E \lbrace r_{t+1} | s_t=s, a_t=a, s_{t+1}=s' \rbrace$
+\item The discount factor for calculating returns, $\gamma$
+\end{itemize}
+
+We lose the information of the probability distribution of rewards, but that
+knowledge is not used in any well-known algorithms.
+
+The $\mathcal{P}^a_{ss'}$ and $\mathcal{R}^a_{ss'}$ matrices are usually
+intractably big, and indeed may be infinite if the \ac{MDP} is infinite.
 
 \section{Reinforcement Learning}
 \section{Sarsa}
@@ -78,4 +188,20 @@ A \acl{MDP} is a \acl{SDP} that follows the Markov property
 Theory about MAXQ and its application to the task we decomposed
 s
 \section{Learning while evaluating a different policy}
+\section{Planning}
+
+Get ideas from \cite{russell2009aima}.
+
+\subsection{Blind Planning}
 \section{Iterated Width}
+
+\section{Neural Networks}
+\subsection{Backpropagation}
+\subsection{Convolutional NNs}
+
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End: 

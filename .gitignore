@@ -3,3 +3,4 @@ report.*
 *.log
 report-blx.bib
 .DS_Store
+auto

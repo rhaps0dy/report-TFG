@@ -29,7 +29,8 @@
 
 %% Bibtex
 \usepackage{csquotes}
-\usepackage[nottoc,numbib]{tocbibind}
+%\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[numbib]{tocbibind}
 \usepackage[style=authoryear,bibencoding=ascii,backend=bibtex]{biblatex}
 \addbibresource{report.bib}
 
@@ -47,6 +48,8 @@
 
 \newcommand{\centeredtitle}[1]{\begin{center} {\Huge \textbf{#1}}
     \addcontentsline{toc}{chapter}{#1} \end{center}\bigskip}
+\newcommand{\argmin}{\operatornamewithlimits{arg\,min}}
+\newcommand{\argmax}{\operatornamewithlimits{arg\,max}}
 
 \input{Content/Acronyms.tex}
 

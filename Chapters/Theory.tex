@@ -76,7 +76,7 @@ only this case.
 
 \subsubsection{Finite and infinite \acp{SDP}}
 An \ac{SDP} is \emph{finite} if the set of states $\mathcal{S}$ and the set of possible
-values of the action function, $\lbrace \mathcal{A(s)} | s \in \mathcal{S}
+values of the action function, $\lbrace \mathcal{A}(s) | s \in \mathcal{S}
 \rbrace$, are finite. Otherwise, it is \emph{infinite}. We will treat only
 finite \acp{SDP} in this work.
 
@@ -182,22 +182,145 @@ knowledge is not used in any well-known algorithms.
 The $\mathcal{P}^a_{ss'}$ and $\mathcal{R}^a_{ss'}$ matrices are usually
 intractably big, and indeed may be infinite if the \ac{MDP} is infinite.
 
+\section{Optimal decision-making in SDP}
+\subsection{Policies and value functions}
+A \emph{policy} $\pi$ is a probability distribution for each state
+$s\in\mathcal{S}$, over the possible actions to take $a \in \mathcal{A}(s)$. It
+is represented as a probability associated to each state-action pair: $P =
+\pi(s, a)$. We may also write $a = \pi(s)$, if the policy is deterministic:
+$\pi(s, a')=1$ if $a'=a$ and $\pi(s, a')=0 if  a' \neq a$
+
+A \emph{value} $V^\pi(s)$ is the expected return for an agent following the
+policy $\pi$, that is currently in state $s$. We define it as follows:
+\begin{equation}
+  V^\pi(s) = E_\pi \lbrace R_t | s_t = s \rbrace =
+  E_\pi \left\{ \left. \sum_{k=0}^\infty \gamma^kr_{t+k+1} \right| s_t = s \right\}
+  \label{definition-value}
+\end{equation}
+
+We can also define the \emph{action-value function} $Q^\pi(s, a)$ of a policy
+$\pi$, which is the expected return from taking action $a$ in state $s$ and
+following $\pi$ thereafter.
+\begin{equation}
+  Q^\pi(s, a) = E_\pi \lbrace R_t | s_t = s, a_t = a \rbrace =
+  E_\pi \left\{ \left. \sum_{k=0}^\infty \gamma^kr_{t+k+1} \right| s_t = s, a_t = a \right\}
+  \label{definition-qvalue}
+\end{equation}
+
+(\cite[Section~3.7]{sutton1998introduction})
+
+We can calculate the value of a state by doing the average of the
+expected values of all the actions, weighted by the probability of each action
+being taken.The probability of each action being taken is determined by the
+policy, so we get the following identity:
+\begin{equation}
+  \begin{split}
+  \sum_{a\in\mathcal{A}(s)}\pi(s, a) Q^\pi(s, a) & = \sum_{a\in\mathcal{A}(s)}\pi(s, a) E_\pi \lbrace R_t | s_t = s, a_t = a \rbrace \\
+  & = E_\pi \lbrace R_t | s_t = s \rbrace = V^\pi(s)
+  \end{split}
+  \label{equivalence-qvalue-value}
+\end{equation}
+
+
+\subsection{Optimal policy}
+
+Some of the policies will have higher values than others. The policy with the
+maximum value for a state is called the \emph{optimal policy} for that state,
+denoted by $\pi^*_s$. The optimal policy for a state is that which maximises its utility.
+\begin{equation}
+\pi^*_s = \argmax_\pi V^\pi(s)
+\end{equation}
+It is also important that the optimal policy is independent of the state it
+starts with, if we don't cut the return at a time-step before the final
+time-step (that is, the \emph{horizon} is infinite) and we use discounted
+returns. So, we can just write $\pi^*$ to refer to the optimal policy.
+
+The value of a state when following the optimal policy, $V^{\pi^*}(s)$, is the
+\emph{true value}, or optimal value, of a state. Thus, we will just write $V(s)$ to refer to it.
+
+If we know the true value function of all the states, we can calculate the optimal policy:
+\begin{equation}
+  \pi^*(s) = \argmax_{a\in\mathcal{A}(s)} \sum_{s'\in\mathcal{S}}\mathcal{P}^a_{ss'}V(s)
+\end{equation}
+
+Notice that we wrote it as an action, function of only the state, and not as a
+probability, function of both the state and the action. This is because optimal
+policies take only one action. Or several, with equal probability, if they all
+have the same, maximal, utility.
+
+(\cite[Subsection~17.1.2]{russell2009aima})
+
+\subsection{Bellman equations}
+Both value and action-value functions satisfy a recursive relationship that is
+very widely used in reinforcement learning algorithms: the Bellman equations.
+
+Starting with equation \ref{definition-value}, we separate the first reward
+from the sum of future rewards to obtain the Bellman equation for values:
+\begin{equation}
+\begin{split}
+  V^\pi(s) & = E_\pi \lbrace R_t | s_t = s \rbrace \\
+  & = E_\pi \left\{ \left. \sum_{k=0}^\infty \gamma^kr_{t+k+1} \right| s_t = s \right\} \\
+  & = E_\pi \left\{ \left. r_{t+1} + \gamma\sum_{k=0}^\infty \gamma^kr_{t+k+2} \right| s_t = s \right\} \\
+  & = \sum_{a\in\mathcal{A}(s)} \left( \pi(s, a) \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
+\left[\mathcal{R}^a_{ss'} + \gamma E_\pi \left\{ \left. \sum_{k=0}^\infty
+\gamma^kr_{t+k+2} \right| s_{t+1} = s' \right\} \right] \right) \\
+  & = \sum_{a\in\mathcal{A}(s)} \left( \pi(s, a) \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
+\left[\mathcal{R}^a_{ss'} + \gamma V^\pi(s') \right] \right)
+\end{split}
+\end{equation}
+
+And let us do the same for action-values, starting with equation
+\ref{definition-qvalue}:
+
+\begin{equation}
+  \begin{split}
+    Q^\pi(s, a) & = E_\pi \lbrace R_t | s_t = s, a_t = a \rbrace \\
+    & = E_\pi \left\{ \left. \sum_{k=0}^\infty \gamma^kr_{t+k+1} \right| s_t = s, a_t = a \right\} \\
+    & = E_\pi \left\{ \left. r_{t+1} + \gamma\sum_{k=0}^\infty \gamma^kr_{t+k+2} \right| s_t = s, a_t = a \right\} \\
+    & = \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'} \left[\mathcal{R}^a_{ss'} +
+      \gamma E_\pi \left\{ \left. \sum_{k=0}^\infty \gamma^kr_{t+k+2} \right| s_{t+1}
+        = s' \right\} \right] \\
+    & = \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
+    \left[\mathcal{R}^a_{ss'} + \gamma V^\pi(s') \right]
+  \end{split}
+\end{equation}
+
+(\cite[Section~3.7]{sutton1998introduction})
+
+And if we then substitute in equation \ref{equivalence-qvalue-value}:
+\begin{equation}
+  Q^\pi(s, a) = \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
+    \left[\mathcal{R}^a_{ss'} + \gamma \sum_{a'\in\mathcal{A}(s')}\pi(s', a')Q^\pi(s', a') \right]
+\end{equation}
+
+
+These look much simpler if we use the optimal policy.
+
+(\cite[Section~17.2.1]{russell2009aima})
+
+
+
 \section{Reinforcement Learning}
-\section{Sarsa}
-\section{Hierarchical Reinforcement Learning\label{section:hierarchical-rl}}
+And that's why we learn Q-values: to not need to learn a policy too!
+
+\subsection{Policy iteration}
+\subsection{Q-learning ?}
+\subsection{Sarsa}
+\subsection{Hierarchical Reinforcement Learning\label{section:hierarchical-rl}}
 Theory about MAXQ and its application to the task we decomposed
 s
-\section{Learning while evaluating a different policy}
 \section{Planning}
 
 Get ideas from \cite{russell2009aima}.
 
 \subsection{Blind Planning}
-\section{Iterated Width}
+\subsection{Iterated Width}
 
 \section{Neural Networks}
 \subsection{Backpropagation}
 \subsection{Convolutional NNs}
+
+\section{Planning+learning}
 
 
 

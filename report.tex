@@ -2,9 +2,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{setspace}
-\usepackage{amssymb,amsmath}
+\usepackage{amssymb,amsmath,amsfonts}
 \usepackage{graphicx}
-\usepackage{eufrak} % mathfrak font
 \usepackage{upquote} % quotes in verbatim environments
 \usepackage{microtype}
 \usepackage[tmargin=3cm, lmargin=3cm, rmargin=3cm, bmargin=3cm]{geometry}
@@ -22,10 +21,12 @@
 \setlength{\emergencystretch}{3em}
 
 \usepackage{fancyhdr}
-\lhead[\rm\thepage]{\fancyplain{}{\sl{\rightmark}}}
-\rhead[\fancyplain{}{\sl{\leftmark}}]{\rm\thepage}
-\chead{}\lfoot{}\rfoot{}\cfoot{}
-\pagestyle{fancy}
+\setlength{\headheight}{15pt}
+\fancyfoot{}
+\fancyhead{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\nouppercase{\leftmark}}
+\fancyhead[LO]{\nouppercase{\rightmark}}
 
 %% Bibtex
 \usepackage{csquotes}
@@ -62,16 +63,16 @@
 
 \pagestyle{fancy}
 \newpage
-\lhead{Contents}
+%\lhead{Contents}
 \tableofcontents
 \newpage
-\lhead{List of Figures}
+%\lhead{List of Figures}
 \listoffigures
 \newpage
-\lhead{List of Tables}
+%\lhead{List of Tables}
 \listoftables
 \newpage
-\lhead{Abbreviations}
+%\lhead{Abbreviations}
 \addcontentsline{toc}{chapter}{Abbreviations}
 \thispagestyle{empty}
 \printacronyms[include-classes=abbrev,name=Abbreviations,heading=chapter*]

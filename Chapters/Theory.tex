@@ -105,7 +105,7 @@ that is, the expected \emph{return} at time $t$, $R_t$.
 We could simply define $R_t$ as the sum of all rewards until the last time step, $T$:
 \begin{equation}
   R_t = r_{t+1} + r_{t+2} + \dots + r_T
-  \label{undiscounted-reward}
+  \label{eq:undiscounted-reward}
 \end{equation}
 
 However, we may be faced with a continuing task, and the final time step may be
@@ -120,7 +120,7 @@ Instead, we use a more general notion, that of \emph{discounted return}:
 \end{equation}
 Where $\gamma$, the \emph{discount rate}, is a parameter, $0 \leq \gamma \leq
 1$. Observe that, if $\gamma=1$, the return is simply the sum of all rewards, as
-in equation \ref{undiscounted-reward}. If $\gamma<1$, however, we solve our
+in equation \ref{eq:undiscounted-reward}. If $\gamma<1$, however, we solve our
 infinite return problem: as the time step approaches infinity, the weight its
 reward is scaled by approaches zero, and $R_t$ converges.
 (\cite[Subsection~17.1.1]{russell2009aima})
@@ -188,14 +188,14 @@ A \emph{policy} $\pi$ is a probability distribution for each state
 $s\in\mathcal{S}$, over the possible actions to take $a \in \mathcal{A}(s)$. It
 is represented as a probability associated to each state-action pair: $P =
 \pi(s, a)$. We may also write $a = \pi(s)$, if the policy is deterministic:
-$\pi(s, a')=1$ if $a'=a$ and $\pi(s, a')=0 if  a' \neq a$
+$\pi(s, a')=1$ if $a'=a$ and $\pi(s, a')=0 if  a' \neq a$.
 
 A \emph{value} $V^\pi(s)$ is the expected return for an agent following the
 policy $\pi$, that is currently in state $s$. We define it as follows:
 \begin{equation}
   V^\pi(s) = E_\pi \lbrace R_t | s_t = s \rbrace =
   E_\pi \left\{ \left. \sum_{k=0}^\infty \gamma^kr_{t+k+1} \right| s_t = s \right\}
-  \label{definition-value}
+  \label{eq:definition-value}
 \end{equation}
 
 We can also define the \emph{action-value function} $Q^\pi(s, a)$ of a policy
@@ -204,7 +204,7 @@ following $\pi$ thereafter.
 \begin{equation}
   Q^\pi(s, a) = E_\pi \lbrace R_t | s_t = s, a_t = a \rbrace =
   E_\pi \left\{ \left. \sum_{k=0}^\infty \gamma^kr_{t+k+1} \right| s_t = s, a_t = a \right\}
-  \label{definition-qvalue}
+  \label{eq:definition-qvalue}
 \end{equation}
 
 (\cite[Section~3.7]{sutton1998introduction})
@@ -218,7 +218,7 @@ policy, so we get the following identity:
   \sum_{a\in\mathcal{A}(s)}\pi(s, a) Q^\pi(s, a) & = \sum_{a\in\mathcal{A}(s)}\pi(s, a) E_\pi \lbrace R_t | s_t = s, a_t = a \rbrace \\
   & = E_\pi \lbrace R_t | s_t = s \rbrace = V^\pi(s)
   \end{split}
-  \label{equivalence-qvalue-value}
+  \label{eq:equivalence-qvalue-value}
 \end{equation}
 
 
@@ -241,6 +241,7 @@ The value of a state when following the optimal policy, $V^{\pi^*}(s)$, is the
 If we know the true value function of all the states, we can calculate the optimal policy:
 \begin{equation}
   \pi^*(s) = \argmax_{a\in\mathcal{A}(s)} \sum_{s'\in\mathcal{S}}\mathcal{P}^a_{ss'}V(s)
+  \label{eq:optimal-policy-value}
 \end{equation}
 
 Notice that we wrote it as an action, function of only the state, and not as a
@@ -254,7 +255,7 @@ have the same, maximal, utility.
 Both value and action-value functions satisfy a recursive relationship that is
 very widely used in reinforcement learning algorithms: the Bellman equations.
 
-Starting with equation \ref{definition-value}, we separate the first reward
+Starting with equation \ref{eq:definition-value}, we separate the first reward
 from the sum of future rewards to obtain the Bellman equation for values:
 \begin{equation}
 \begin{split}
@@ -267,10 +268,11 @@ from the sum of future rewards to obtain the Bellman equation for values:
   & = \sum_{a\in\mathcal{A}(s)} \left( \pi(s, a) \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
 \left[\mathcal{R}^a_{ss'} + \gamma V^\pi(s') \right] \right)
 \end{split}
+\label{eq:bellman-v}
 \end{equation}
 
 And let us do the same for action-values, starting with equation
-\ref{definition-qvalue}:
+\ref{eq:definition-qvalue}:
 
 \begin{equation}
   \begin{split}
@@ -287,17 +289,40 @@ And let us do the same for action-values, starting with equation
 
 (\cite[Section~3.7]{sutton1998introduction})
 
-And if we then substitute in equation \ref{equivalence-qvalue-value}:
+And if we then substitute in equation \ref{eq:equivalence-qvalue-value}:
 \begin{equation}
   Q^\pi(s, a) = \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
     \left[\mathcal{R}^a_{ss'} + \gamma \sum_{a'\in\mathcal{A}(s')}\pi(s', a')Q^\pi(s', a') \right]
+    \label{eq:bellman-q}
 \end{equation}
 
 
-These look much simpler if we use the optimal policy.
-
+\subsubsection{Bellman equations with the optimal policy}
+Recall from equation \ref{eq:optimal-policy-value} that the optimal policy takes
+the action that maximises the true value of the next state. So, let's put this
+notion into equation \ref{eq:bellman-v}:
+\begin{equation}
+  \begin{split}
+  V(s) &= \sum_{a\in\mathcal{A}(s)} \left( \pi^*(s, a)
+    \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
+    \left[\mathcal{R}^a_{ss'} + \gamma V^\pi(s') \right] \right) \\
+  &= \max_{a\in\mathcal{A}(s)}\sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
+\left[\mathcal{R}^a_{ss'} + \gamma V^\pi(s') \right]
+  \end{split}
+\end{equation}
+And equation \ref{eq:bellman-q}:
+\begin{equation}
+  \begin{split}
+  Q(s, a) &= \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
+    \left[\mathcal{R}^a_{ss'} + \gamma \sum_{a'\in\mathcal{A}(s')}\pi^*(s', a')Q^\pi(s', a') \right] \\
+  &= \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
+    \left[\mathcal{R}^a_{ss'} + \gamma \max_{a'\in\mathcal{A}(s')}Q^\pi(s', a') \right]
+  \end{split}
+  \end{equation}
 (\cite[Section~17.2.1]{russell2009aima})
 
+These optimal Bellman equations are the basis of most modern reinforcement
+learning algorithms.
 
 
 \section{Reinforcement Learning}

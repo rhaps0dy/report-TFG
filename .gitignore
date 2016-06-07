@@ -4,3 +4,5 @@ report.*
 report-blx.bib
 .DS_Store
 auto
+_region_*
+prv_report.ini

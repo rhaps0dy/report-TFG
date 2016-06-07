@@ -6,7 +6,7 @@
 \usepackage{graphicx}
 \usepackage{upquote} % quotes in verbatim environments
 \usepackage{microtype}
-\usepackage[tmargin=3cm, lmargin=3cm, rmargin=3cm, bmargin=3cm]{geometry}
+\usepackage[tmargin=3cm, lmargin=3cm, rmargin=3cm, bmargin=3cm, marginparsep=0.3cm, marginparwidth=2.4cm]{geometry}
 \usepackage{hyperref}
 \usepackage{import}
 \PassOptionsToPackage{usenames,dvipsnames}{color} % color is loaded by hyperref
@@ -19,6 +19,18 @@
 \urlstyle{same}  % don't use monospace font for urls
 \usepackage{parskip}
 \setlength{\emergencystretch}{3em}
+
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\let\Algorithm\algorithm
+\renewcommand\algorithm[1][]{\Algorithm[#1]\setstretch{1.25}}
+\usepackage{algpseudocode}
+\algblockdefx[RepeatComment]{RepeatComment}{EndRepeatComment}
+    [1][]{\textbf{repeat} #1}
+    {\textbf{end repeat}}
+\algblockdefx[RepeatUntilComment]{RepeatUntilComment}{EndRepeatUntilComment}
+    [1][]{\textbf{repeat} #1}
+    [1][]{\textbf{until} #1}
 
 \usepackage{fancyhdr}
 \setlength{\headheight}{15pt}
@@ -47,6 +59,11 @@
 \end{figure}
 }
 
+\usepackage{mfirstuc} % capitalisewords
+
+%\newcommand{\newconceptspec}[2]{\emph{#1}\marginpar{\footnotesize\textsc{#2}}}
+\newcommand{\newconceptspec}[2]{\emph{#1}}
+\newcommand{\newconcept}[1]{\newconceptspec{#1}{\capitalisewords{#1}}}
 \newcommand{\centeredtitle}[1]{\begin{center} {\Huge \textbf{#1}}
     \addcontentsline{toc}{chapter}{#1} \end{center}\bigskip}
 \newcommand{\argmin}{\operatornamewithlimits{arg\,min}}
@@ -56,10 +73,10 @@
 
 \begin{document}
 \pagenumbering{roman}
-\input{Content/Title.tex}
+%\input{Content/Title.tex}
 \onehalfspacing
-\input{Content/Acknowledgements.tex}
-\input{Content/Abstract.tex}
+%\input{Content/Acknowledgements.tex}
+%\input{Content/Abstract.tex}
 
 \pagestyle{fancy}
 \newpage
@@ -81,7 +98,8 @@
 
 \input{Chapters/Introduction.tex}
 \input{Chapters/Theory.tex}
-\input{Chapters/Experiments.tex}
+\input{Chapters/Methodology.tex}
+\input{Chapters/Evaluation.tex}
 \input{Chapters/Conclusions.tex}
 
 \newpage

@@ -351,9 +351,9 @@ algorithms for \ac{RL}. Those algorithms can compute optimal policies for an
 $\mathcal{R}^a_{ss'}$, and the parameter $\gamma$).
 
 \ac{VI} works by keeping a table with the values of all states, and
-turning the optimal value Bellman equation (equation
-\ref{eq:bellman-v-optimal}) into an update rule for the table. \ac{VI} is
-described in algorithm \ref{alg:value-iteration}.
+turning the optimal value Bellman equation (\ref{eq:bellman-v-optimal}) into an
+update rule for the table. \ac{VI} is described in algorithm
+\ref{alg:value-iteration}.
 
 \begin{algorithm}
 \begin{algorithmic}
@@ -527,7 +527,7 @@ in $\mathcal{M}$ remain near-optimal policies in $\mathcal{M'}$: if $\left|
 V^\pi_M - V^*_M \right| < \varepsilon$, then $\left| V^\pi_{M'} - V^*_{M'}
 \right| < \varepsilon$.
 
-\subsection{Hierarchical Reinforcement Learning\label{section:hierarchical-rl}}
+\section{Hierarchical Reinforcement Learning\label{section:hierarchical-rl}}
 
 Suppose Alice wants to eat a salad. She needs the ingredients, so, she needs to
 go to the grocery store. To accomplish that, she needs to get out of the house,
@@ -545,11 +545,12 @@ performed. For example, learning to walk is useful for going to the grocery
 store or going to school, and it gets perfected every time Alice (among other
 things) goes to either of the two places.
 
+\subsection{Options}
+
 How may we encode this helpful intuition into reinforcement learning agents?
 \cite{sutton1999between}, have an answer. The agent may take
 \newconcept{options} instead of actions at every state. Options are courses of
-action that last one or more time steps, and follow their own policy. Normal
-actions are a special case of options, of duration 1 time step. Options take
+action that last one or more time steps, and follow their own policy. Options take
 other options and have their own policy, which can be improved every time they
 are taken.
 
@@ -564,9 +565,106 @@ the option's policy.
 the option is interrupted in state $s$.
 \end{itemize}
 
-Since We call the set of options $\mathcal{O}$
+The policy for an option only needs to be defined for a subset $S_o \subseteq
+\mathcal{S}$ of the states, as we can define $\beta(s) = 1$ for $s \in S_o$.
+Usually also, the action can be initiated wherever its policy is defined, that
+is, $\mathcal{I} = S_o$
 
+Normal actions are a special case of options, of duration 1 time step. The
+option corresponding to an action $a$ is defined as follows:
+\begin{itemize}
+  \item $\mathcal{I} = \left\{ s \in \mathcal{S} | a \in \mathcal{A}_s \right\}$
+  all the states the action can be taken in.
+  \item $\pi(s, a') = 1$ if $a'=a$, otherwise $\pi(s, a') = 0$; for all
+$s\in\mathcal{I}$.
+  \item $\beta(s) = 1$ for all $s\in\mathcal{S}$.
+\end{itemize}
 
+\subsection{Semi-Markov options}
+Sometimes it is desirable that actions end after a certain ``timeout'', as well
+as in certain states, to avoid agents getting stuck. This case is accommodated
+with \newconcept{semi-Markov options}, that depend on the whole history of
+states, actions and rewards since they start.
+
+Let a semi-Markov option start in time $t$ and ends in time $\tau$. We call the
+sequence $s_t,a_t,r_t,s_{t+1},a_{t+1},\dots,r_\tau,s_\tau$ the
+\newconcept{history}, denoted by $h_{t\tau}$. The set of all possible
+$h_{t\tau}$ is $\Omega$
+
+An semi-Markov option is a triple $\langle \mathcal{I}, \pi, \beta \rangle$,
+with only $\pi$ and $\beta$ differing from the Markov option case:
+\begin{itemize}
+  \item $\pi(h, a)$, $\pi : \Omega \times \mathcal{A} \mapsto \mathbb{R}$,
+the option's policy.
+  \item $\beta(h)$, $\beta : \Omega \mapsto [0, 1]$, the probability that
+the option is interrupted in state $s$.
+\end{itemize}
+
+Options that take other options as actions are semi-Markov, even if all the
+underlying options are Markov options.
+
+\subsection{\acfp{SMDP}}
+
+A \ac{SMDP} is defined by:
+\begin{itemize}
+  \item A set of states $\mathcal{S}$.
+  \item A set of actions. We call it $\mathcal{O}$, because this set will be the
+    set of possible options in our case. Being a set of options, each has some
+    possible initial states. We denote the options available in state $s$ as
+$\mathcal{O}_s$.
+  \item An expected cumulative discounted reward after taking action $o \in
+    \mathcal{O}$ when in state $s \in \mathcal{S}$. We denote it by $r^o_s$. Let
+    $t+k$ be the random time at which $o$ terminates. Let $\varepsilon(o, s, t)$
+    be the event of option $o$ being initiated in state $s$ at time $t$. Then:
+    \begin{equation}
+      r^o_s = E\left\{ r_{t+1} + \gamma r_{t+2} + \gamma^2 r_{t+3} + \dots
+      + \gamma^{k-1} r_{t+k} \right\}
+    \end{equation}
+  \item A well defined joint distribution of next state and transit time, $p(s,
+    o, s', k)$, $p : \mathcal{S} \times \mathcal{O} \times \mathcal{S} \times
+    \mathbb{N} \mapsto [0, 1]$. For our purposes, we only need $p^o_{ss'}$:
+    \begin{equation}
+      p^o_{ss'} = \sum_{k=1}^\infty p(s, o, s', k) \gamma^k
+    \end{equation}
+    This describes the likelihood of reaching a state $s'$ from state $s$ when
+    taking option $o$, discounted depending on the time taken to reach it. The
+    usefulness of this term will be apparent in the \ac{SMDP}'s Bellman equation
+  (\ref{eq:smdp-bellman-q}).
+  \item The discount factor $\gamma$.
+\end{itemize}
+
+So we treat it as the tuple $\langle \mathcal{S}, \mathcal{O}, r^o_s, p^o_{ss'},
+\gamma\rangle$.
+
+\subsection{Action-value Bellman equation and Sarsa}
+The Bellman equation for action-values in \acp{SMDP} ends up looking very
+similar to the one for \acp{MDP}.
+\begin{equation}
+  Q^\pi(s, o) = r^o_s + \sum_{s'}p^o_{ss'} \sum_{o' \in \mathcal{O}_{s'}} \pi(s', o')Q^\pi(s', o')
+  \label{eq:smdp-bellman-q}
+\end{equation}
+
+The factor $p^o_{ss'}$ is useful because it incorporates both the probability of
+reaching a state and the discount its action-value would incur. Thus, it is
+exactly what the Q-value of the state we arrive in should be weighted by.
+
+And of course, we take the maximum action-value if we are defining the optimal policy:
+\begin{equation}
+  Q^\pi(s, o) = r^o_s + \sum_{s'}p^o_{ss'} \max_{o' \in \mathcal{O}_{s'}} Q^*(s', o')
+\end{equation}
+
+The Sarsa update looks like this (analogous to the Q-learning update from
+\cite[Section~3.2]{sutton1999between}):
+\begin{equation}
+  Q(s_t, o_t) \gets (1-\alpha)Q(s_t, o_t) + \alpha \left[r_{t:t+k} + \gamma^k Q(s_{t+k}, o_{t+k}) \right]
+\end{equation}
+Where $s_t$, $o_t$ are the currently selected state and option, $s_{t+k}$ and
+$o_{t+k}$ are the next selected state and option, and $k$ is the number of time
+steps between $s_t$ and $s_{t+k}$. $r_{t:t+k}$ is the cumulative discounted
+reward over the indicated time range.
+
+Note that all these expressions reduce to their ordinary \ac{MDP} counterparts
+when the option corresponds to a primitive action.
 
 %DIMARTS
 \section{Planning}

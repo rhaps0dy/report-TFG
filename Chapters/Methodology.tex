@@ -1,7 +1,100 @@
 %DIJOUS
 \chapter{Methodology}
 \section{Reverse-engineering \acl{MR}}
+We used the \acl{ALE} (\cite{bellemare2013arcade}) to take several simultaneous
+screen and \ac{RAM} snapshots. We usually took 5 to 10 snapshots in the space of
+1 or 2 seconds, while performing certain action in the game. Then, we looked at
+the bytes that changed value from snapshot to snapshot.
+
+We also used the debugger built-in to the Atari 2600 emulator, Stella
+(\cite{stella}). Using the command \verb-breakif <condition>-, that pauses the
+game and shows the debugger if a condition is met, enabled us to play and check
+whether a memory position behaved as we suspected.
+
+In table \ref{table:atari-ram} and in the list below we reproduce the layout of
+the Atari 2600's main memory and what each position affects in \acl{MR}.
+
+Some entries can be modified in the Stella debugger when the game is running,
+and affect the game. They will be marked with an asterisk (\textbf{*}). The
+values that are not marked editable may be editable in other circumstances, and
+are probably editable in the middle of the computations within a frame. However,
+their value has been observed only going back to what it was if modified between
+frames.
+
+\fxwarning{Explain the Atari's RAM, explain Panama Joe}
+
+\begin{table}[h]
+\begin{center}
+\newcommand{\ram}[2]{\hyperref[ram:#1]{#2}}
+\newcommand{\rame}[2]{\hyperref[ram:#1]{\textbf{#2*}}}
+\begin{tabular}{c|cccccccccccccccc}
+  & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & A & B & C & D & E & F \\
+\hline
+8 &   &   &   &\rame{screen}{83}&   &   &   &   &   &   &   &   &   &   &   &   \\
+9 &   &   &   &\rame{score}{93}& \rame{score}{94}& \rame{score}{95}&   &   &   &   &   &   &   &   &   &   \\
+A &   &   &   &   &   &   &   &   &   &   &\rame{x}{AA}&\rame{y}{AB}&   &   &   &   \\
+B &   &   &   &   &   &   &   &   &   &   &   \rame{lives}{BA} & & & & & \\
+C &   &   &   &\rame{inventory}{C1}&   &   &   &   &   &   &   &   &   &   &   &   \\
+D &   &   &   &   &   &   &   &   &   &\rame{jump}{D6}&   &\rame{fall}{D8}&   &   &   &   \\
+E &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   \\
+F &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   &   \\
+\end{tabular}
+\end{center}
+\label{table:atari-ram}
+\caption{The \acs{RAM} layout for \acl{MR}.}
+\end{table}
+
+{
+\newcommand{\entry}[2]{\item\label{ram:#1}\textbf{0x#2}: Not editable.}
+\newcommand{\entrye}[2]{\item\label{ram:#1}\textbf{0x#2}: Editable.}
+\newcommand{\n}[1]{0x#1}
+
+\begin{enumerate}
+\entrye{lives}{BA} The number of lives the player has left, that is, the number of
+times the player can die and continue the game afterwards. Controls the number
+of hats displayed at the top. Panama Joe starts with 5 lives. The counter can go
+up to 6 without graphical problems.
+\entrye{jump}{D6} The current frame of the jump. Set to \n{FF} when in the ground. Set
+to \n{13} when the jump starts. If set to higher than \n{13}, the game behaves
+oddly. It can be reset to whatever value at any time, causing Panama Joe to
+start a jump, even in mid-air.
+\entrye{fall}{D8} The current frame of the fall. Normally set to \n{00}. When falling
+off an elevated ground, or off a jump, this value will begin to count up. If it
+is \n{08} or higher when Panama Joe touches the ground, he will die.
+\item\label{ram:score}\textbf{0x93}, \textbf{0x94}, \textbf{0x95}: Editable. The
+score, represented in \acs{BCD}. This is, every nibble represents a decimal digit.
+
+\entrye{screen}{83} The current screen. If edited, the new screen will only be
+partially drawn. Exit the screen and reenter it by playing and the issue will go
+away.
+\entrye{x}{AA} The X position of the character. If set to the middle of the air,
+Panama Joe will fall.
+\entrye{y}{AB} The Y position of the character. If set to the middle of the air,
+and there is a platform below, the character will not fall! Instead, it will
+behave as if it was on a ladder. The Y values of the three floors that every
+level has are \n{94}, \n{C0} and \n{EB}.
+\entrye{inventory}{C1} The contents of the player's inventory. Each possible
+object in it is associated to a bit, that is set if the object is in the
+inventory. At most 6 objects can be carried without causing graphical
+corruptions. The objects and their associations are:
+\begin{center}
+\begin{tabular}{c|c|c|c|c|c|c}
+\n{80} & \n{40} & \n{20} & \n{10} & \n{08} & \n{04} & \n{02} & \n{01} \\
+\hline
+torch sword sword key key key key mallet \\
+\end{tabular}
+\end{center}
+\end{enumerate}
+}
+
+
+\fxwarning{Talk about the RAM of the Atari having 128 bytes and the ones relevant are 0x80 0xff}
+
+
 \subsection{Reward shaping\label{subsection:reward-shaping}}
+\begin{equation}
+  t_1 = \frac{v_{x_2}(y_1-y_2) - v_{y_2}(x_1-x_2)}{v_{y_2}v_{x_1} - v_{x_2}v_{y_1}}
+\end{equation}
 \section{Planning}
 \subsection{\acl{IW}(1)}
 \subsection{\acl{IW}(3) on location}

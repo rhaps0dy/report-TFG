@@ -1,6 +1,63 @@
 %DIJOUS
 \chapter{Methodology}
-\section{Reverse-engineering \acl{MR}}
+\section{\acl{MR}}
+\subsection{Description}
+You, the player, are Panama Joe, an intrepid explorer-archaeologist. Your latest
+trip has brought you to discover the entrance to an Aztec pyramid. Filled with
+excitement, you rush to search the treasures that surely await inside. But the
+pyramid is full of traps and monsters. You will need your wits and agility to
+get out alive!
+
+History inspired in the review by \citet{adair2007montezuma}.
+
+\begin{figure}[p]
+\setlength{\unitlength}{\paperwidth - 3cm}
+\begin{center}
+\noindent\makebox[\textwidth]{
+  \begin{picture}(1,.513)
+    \put(0,0){\includegraphics[width=\unitlength]{img/montezuma_all_pt1.png}}
+    \put(.58,.485){\color[rgb]{1,1,1}\makebox(0,0)[lb]{0}}
+    \put(.83,.485){\color[rgb]{1,1,1}\makebox(0,0)[lb]{1}}
+    \put(.33,.357){\color[rgb]{1,1,1}\makebox(0,0)[lb]{3}}
+    \put(.58,.357){\color[rgb]{1,1,1}\makebox(0,0)[lb]{4}}
+    \put(.83,.357){\color[rgb]{1,1,1}\makebox(0,0)[lb]{5}}
+    \put(.08,.228){\color[rgb]{1,1,1}\makebox(0,0)[lb]{8}}
+    \put(.28,.228){\color[rgb]{1,1,1}\makebox(0,0)[lb]{9}}
+    \put(.58,.228){\color[rgb]{1,1,1}\makebox(0,0)[lb]{10}}
+    \put(.83,.228){\color[rgb]{1,1,1}\makebox(0,0)[lb]{11}}
+    \put(.08,.1){\color[rgb]{1,1,1}\makebox(0,0)[lb]{16}}
+    \put(.33,.1){\color[rgb]{1,1,1}\makebox(0,0)[lb]{17}}
+    \put(.6,.1){\color[rgb]{1,1,1}\makebox(0,0)[lb]{18}}
+    \put(.83,.1){\color[rgb]{1,1,1}\makebox(0,0)[lb]{19}}
+  \end{picture}
+}
+
+\vspace{.2cm}
+
+\noindent\makebox[\textwidth]{
+  \begin{picture}(1,.513)
+    \put(0,0){\includegraphics[width=\unitlength]{img/montezuma_all_pt2.png}}
+    \put(.08,.485){\color[rgb]{1,1,1}\makebox(0,0)[lb]{2}}
+    \put(.83,.485){\color[rgb]{1,1,1}\makebox(0,0)[lb]{15}}
+    \put(.08,.357){\color[rgb]{1,1,1}\makebox(0,0)[lb]{6}}
+    \put(.33,.357){\color[rgb]{1,1,1}\makebox(0,0)[lb]{7}}
+    \put(.08,.228){\color[rgb]{1,1,1}\makebox(0,0)[lb]{12}}
+    \put(.28,.228){\color[rgb]{1,1,1}\makebox(0,0)[lb]{13}}
+    \put(.58,.228){\color[rgb]{1,1,1}\makebox(0,0)[lb]{14}}
+    \put(.08,.1){\color[rgb]{1,1,1}\makebox(0,0)[lb]{20}}
+    \put(.33,.1){\color[rgb]{1,1,1}\makebox(0,0)[lb]{21}}
+    \put(.58,.1){\color[rgb]{1,1,1}\makebox(0,0)[lb]{22}}
+    \put(.83,.1){\color[rgb]{1,1,1}\makebox(0,0)[lb]{23}}
+  \end{picture}
+}
+\end{center}
+\caption[The complete map of \acl{MR}.]{The complete map of \acl{MR}. Rooms are
+numbered from left to right and from top to bottom. The pyramid they form has
+been cut to fit in the page. Room 15 is located to the left of room 16. The player
+starts in room 1 and finishes in room 15.\label{fig:montezuma_all}}
+\end{figure}
+
+\subsection{Reverse-engineering \acl{MR}}
 We used the \acl{ALE} (\cite{bellemare2013arcade}) to take several simultaneous
 screen and \ac{RAM} snapshots. We usually took 5 to 10 snapshots in the space of
 1 or 2 seconds, while performing certain action in the game. Then, we looked at

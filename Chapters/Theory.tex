@@ -14,13 +14,13 @@ computing environment.
 
 \section{\aclp{SDP}}
 In this section, we describe the \acf{SDP} and related models. Most of the
-definitions are taken from the \acl{RL} reference textbook,
-\cite{sutton1998introduction}. Some are from the \ac{AI} textbook,
-\cite{russell2009aima}. Concrete citations will be given after some claims, but
+definitions are taken from the \ac{RL} reference textbook by
+\citet{sutton1998introduction}. Some are from the \ac{AI} reference textbook by
+\citet{russell2009aima}. Concrete citations will be given after some claims, but
 otherwise assume the concepts are taken from the first book.
 
 Let us describe the \ac{SDP} model from
-(\cite[Section~3.1]{sutton1998introduction}). There is an \newconcept{agent} that, every
+\citet[Section~3.1]{sutton1998introduction}. There is an \newconcept{agent} that, every
 \newconcept{time step}, takes an \newconcept{action} in the \newconcept{environment}. The
 environment is a process that has a \newconcept{state}. When the agent takes an
 action, the environment's state changes. The agent also receives a \newconcept{reward}
@@ -39,10 +39,10 @@ actions in each state, which belong to the set of all possible actions
 $\mathcal{A}_s \subseteq \mathcal{A}$, the reward for each state $\mathcal{S}$
 and the rules for transitioning to the new state in each time step. The agent
 simply chooses the action $a_t$ in each time step. The interaction between agent
-and environment is illustrated in figure \ref{fig:agent-environment}.
+and environment is illustrated in \ffref{fig:agent-environment}.
 
 \inkscapefig{agent-environment}{Diagram of interaction between agent and
-  environment (\cite[Section~3.1]{sutton1998introduction})}
+  environment \citep[Section~3.1]{sutton1998introduction}}
 
 This model is really flexible. It does not constrain time steps to have the same
 length, so each can represent a decision branching point and not actual time. An
@@ -54,8 +54,8 @@ stochastic and not deterministic.
 The model also accepts different abstraction levels of states and actions: in a
 video game, they can be raw pixel data and controller input, or entity position
 representation and moving to a certain screen. This idea is the basis of
-hierarchical reinforcement learning, which is explained in section
-\ref{section:hierarchical-rl}.
+hierarchical reinforcement learning, which is explained in
+\ffref{sec:hierarchical-rl}.
 
 It is important to understand that the agent is only the \emph{process} that
 \emph{decides} actions, not a physical object or entity. In the case of a robot, the
@@ -73,7 +73,7 @@ the reward function.
 
 The model so far maps to two the notions we needed: ``\acl{MR}'' is the environment,
 ``to play'' is to run the process so that the agent chooses actions.
-\subsection{Considerations and characteristics of \acp{SDP}}
+\subsection{Considerations and characteristics of \acp{SDP}\label{subsec:considerations-sdp}}
 We may also call an \ac{SDP} a \newconcept{task}, when we are emphasising its nature
 as a problem that the agent has to solve.
 
@@ -92,7 +92,7 @@ Sometimes it makes sense to divide a task in non-overlapping continued
 interactions between the agent and environment. Such tasks are called
 \newconcept{episodic}, and they have one final time step. In contrast,
 \newconcept{continuing} tasks never stop, in theory.
-(\cite[Section~3.3]{sutton1998introduction})
+\citep[Section~3.3]{sutton1998introduction}
 
 \subsubsection{Deterministic and stochastic \acp{SDP}}
 We have not yet mentioned how the next state of an \ac{SDP} is determined. In
@@ -102,7 +102,7 @@ states and rewards.
 
 Sometimes, the probability distribution has all its weight on a single
 state, that is, the next state is a function of the previous history of the
-process. Such \acp{SDP} are called \newconcept{deterministic}. When a \ac{SDP} is not
+process. Such \acp{SDP} are called \newconcept{deterministic}. When an \ac{SDP} is not
 deterministic, it is \newconcept{stochastic}.
 
 \subsection{Returns}
@@ -127,12 +127,12 @@ Instead, we use a more general notion, that of \newconcept{discounted return}:
 \end{equation}
 Where $\gamma$, the \newconcept{discount rate}, is a parameter, $0 \leq \gamma \leq
 1$. Observe that, if $\gamma=1$, the return is simply the sum of all rewards, as
-in equation \ref{eq:undiscounted-reward}. If $\gamma<1$, however, we solve our
+in \ffref{eq:undiscounted-reward}. If $\gamma<1$, however, we solve our
 infinite return problem: as the time step approaches infinity, the weight its
 reward is scaled by approaches zero, and $R_t$ converges.
-(\cite[Subsection~17.1.1]{russell2009aima})
+\citep[Subsection~17.1.1]{russell2009aima}
 
-\subsection{\aclp{MDP}}
+\subsection{\aclp{MDP}\label{subsec:MDP}}
 The \ac{SDP} formalism is not really used in practice. \acfp{MDP}, which are a
 restricted case of \acp{SDP}, are used instead.
 
@@ -163,7 +163,7 @@ trivial: let the state $s'_t$ of the \ac{MDP} be the sequence of current and
 previous states, actions and rewards of the SDP, $s_t,a_t,r_t,s_{t-1},\dots,s_n$. If the
 \ac{SDP} depends on all of its history $n=0$, otherwise we can take data until
 $n=t-m$. Indeed, the latter, excluding rewards, is the approach taken in
-\cite{mnih2015human}; \cite{kulkarni2016hierarchical}; and this thesis.
+\citet{mnih2015human}, \citet{kulkarni2016hierarchical}, and this thesis.
 
 It is also possible for the state to encode an abstracted representation of the
 past actions and sensations. A repairer agent includes in its state the size of
@@ -172,7 +172,7 @@ rewards it had while performing such task.
 
 We usually specify an \ac{MDP} task with the tuple $\langle \mathcal{S}, \mathcal{A}_s,
 \mathcal{P}^a_{ss'}, \mathcal{R}^a_{ss'}, \gamma \rangle$:
-(based on \cite[Section~3.6]{sutton1998introduction})
+(based on \citet[Section~3.6]{sutton1998introduction})
 \begin{itemize}
 \item The set of possible states, $\mathcal{S}$.
 \item The available actions for each state, as a function of the state,
@@ -185,12 +185,13 @@ We usually specify an \ac{MDP} task with the tuple $\langle \mathcal{S}, \mathca
 \item The discount factor for calculating returns, $\gamma$
 \end{itemize}
 
-Note that we lose the information of the probability distribution of rewards.
+Note that the model does not explicitly represent the probability distribution
+on rewards, only the expectation.
 
 The $\mathcal{P}^a_{ss'}$ and $\mathcal{R}^a_{ss'}$ matrices are usually
 intractably big, and indeed may be infinite if the \ac{MDP} is infinite.
 
-\section{Optimal decision-making in SDP}
+\section{Optimal decision-making in \acp{SDP}}
 \subsection{Policies and value functions}
 A \newconcept{policy} $\pi$ is a probability distribution for each state
 $s\in\mathcal{S}$, over the possible actions to take $a \in \mathcal{A}_s$. It
@@ -215,11 +216,11 @@ following $\pi$ thereafter.
   \label{eq:definition-qvalue}
 \end{equation}
 
-(\cite[Section~3.7]{sutton1998introduction})
+\citep[Section~3.7]{sutton1998introduction}
 
 We can calculate the value of a state by doing the average of the
 expected values of all the actions, weighted by the probability of each action
-being taken.The probability of each action being taken is determined by the
+being taken. The probability of each action being taken is determined by the
 policy, so we get the following identity:
 \begin{equation}
   \begin{split}
@@ -230,7 +231,7 @@ policy, so we get the following identity:
 \end{equation}
 
 
-\subsection{Optimal policy\label{subsection:optimal-policy}}
+\subsection{Optimal policy\label{subsec:optimal-policy}}
 
 Some of the policies will have higher values than others. The policy with the
 maximum value for a state is called the \newconcept{optimal policy} for that state,
@@ -253,18 +254,17 @@ the environment, we can calculate the optimal policy:
   \label{eq:optimal-policy-value}
 \end{equation}
 
-Notice that we wrote it as an action, function of only the state, and not as a
-probability, function of both the state and the action. This is because optimal
-policies take only one action. Or several, with equal probability, if they all
-have the same, maximal, utility.
+Where ties are broken arbitrarily. Notice that we wrote it as a mapping from
+states to actions, and not as a mapping from states and actions to probability
+weights. This is because optimal policies take only one action.
 
-(\cite[Subsection~17.1.2]{russell2009aima})
+\citep[Subsection~17.1.2]{russell2009aima}
 
 \subsection{Bellman equations}
 Both value and action-value functions satisfy a recursive relationship that is
 very widely used in reinforcement learning algorithms: the Bellman equations.
 
-Starting with equation \ref{eq:definition-value}, we separate the first reward
+Starting with \ffref{eq:definition-value}, we separate the first reward
 from the sum of future rewards to obtain the Bellman equation for values:
 \begin{equation}
 \begin{split}
@@ -280,8 +280,8 @@ from the sum of future rewards to obtain the Bellman equation for values:
 \label{eq:bellman-v}
 \end{equation}
 
-And let us do the same for action-values, starting with equation
-\ref{eq:definition-qvalue}:
+And let us do the same for action-values, starting with
+\ffref{eq:definition-qvalue}:
 
 \begin{equation}
   \begin{split}
@@ -296,9 +296,9 @@ And let us do the same for action-values, starting with equation
   \end{split}
 \end{equation}
 
-(\cite[Section~3.7]{sutton1998introduction})
+\citep[Section~3.7]{sutton1998introduction}
 
-And if we then substitute in equation \ref{eq:equivalence-qvalue-value}:
+And if we then substitute in \ffref{eq:equivalence-qvalue-value}:
 \begin{equation}
   Q^\pi(s, a) = \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
     \left[\mathcal{R}^a_{ss'} + \gamma \sum_{a'\in\mathcal{A}_{s'}}\pi(s', a')Q^\pi(s', a') \right]
@@ -307,9 +307,9 @@ And if we then substitute in equation \ref{eq:equivalence-qvalue-value}:
 
 
 \subsubsection{Bellman equations with the optimal policy}
-Recall from equation \ref{eq:optimal-policy-value} that the optimal policy takes
+Recall from \ffref{eq:optimal-policy-value} that the optimal policy takes
 the action that maximises the true value of the next state. So, let's put this
-notion into equation \ref{eq:bellman-v}:
+notion into \ffref{eq:bellman-v}:
 \begin{equation}
   \begin{split}
   V(s) &= \sum_{a\in\mathcal{A}_s} \left( \pi^*(s, a)
@@ -320,7 +320,7 @@ notion into equation \ref{eq:bellman-v}:
   \end{split}
 \label{eq:bellman-v-optimal}
 \end{equation}
-And equation \ref{eq:bellman-q}:
+And \ffref{eq:bellman-q}:
 \begin{equation}
   \begin{split}
   Q(s, a) &= \sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'}
@@ -338,22 +338,21 @@ learning algorithms.
 
 \section{\acl{RL}}
 Unless stated otherwise, concepts in this section are taken from
-\cite{sutton1998introduction}. More concrete citations may also be given.
+\citet{sutton1998introduction}. More concrete citations may also be given.
 
 \acf{RL} is about an agent learning from experience how to behave to maximise
 rewards over time. This experience is usually gathered by interacting with the
 environment.
 
-\subsection{\acl{VI}}
+\subsection{\acl{VI}\label{subsec:VI}}
 \acf{VI} is an algorithm, part of the Dynamic Programming collection of
 algorithms for \ac{RL}. Those algorithms can compute optimal policies for an
 \ac{MDP}, given a perfect model of the environment ($\mathcal{P}^a_{ss'}$,
 $\mathcal{R}^a_{ss'}$, and the parameter $\gamma$).
 
 \ac{VI} works by keeping a table with the values of all states, and
-turning the optimal value Bellman equation (\ref{eq:bellman-v-optimal}) into an
-update rule for the table. \ac{VI} is described in algorithm
-\ref{alg:value-iteration}.
+turning the optimal value Bellman equation (\ffref{eq:bellman-v-optimal}) into an
+update rule for the table. \ac{VI} is described in \ffref{alg:value-iteration}.
 
 \begin{algorithm}
 \begin{algorithmic}
@@ -366,16 +365,16 @@ update rule for the table. \ac{VI} is described in algorithm
     \State $\Delta \gets \max(\Delta, \left|V(s) - v \right| $
     \EndFor
 \Until{$\Delta < \theta$ a small constant}
-\State Output optimal policy using equation \ref{eq:optimal-policy-value}
+\State Output optimal policy using \ffref{eq:optimal-policy-value}
 \end{algorithmic}
-\caption{\acl{VI} (\cite[Section~4.4]{sutton1998introduction})}
+\caption{\acl{VI} \citep[Section~4.4]{sutton1998introduction}}
 \label{alg:value-iteration}
 \end{algorithm}
 
 The value table kept in \ac{VI} is guaranteed to converge the true value $V^*$
 under the same conditions that guarantee the existence of the latter
 
-(\cite[Section~4.4]{sutton1998introduction})
+\citep[Section~4.4]{sutton1998introduction}
 
 There is another variant of \acl{VI}. In each outer iteration, we update only
 one of the values in the table. As long as none of the values stops being
@@ -388,12 +387,12 @@ single whole sweep.
 
 We can take advantage of this, and update more often the more promising states,
 to be able to terminate \acl{VI} earlier and still have a good enough policy.
-(\cite[Section~4.5]{sutton1998introduction})
+\citep[Section~4.5]{sutton1998introduction}
 
  We could also just update the value of whatever state the agent ended up in
 from the previous iteration, provided that we make the agent eventually visit
 all states, and still converge to the optimal policy. This one of the basic
-ideas in the Sarsa algorithm in subsection \ref{subsection:sarsa}, Q-learning,
+ideas in the Sarsa algorithm in \ffref{subsec:sarsa}, Q-learning,
 \aclp{DQN} and many others similar in spirit.
 
 \subsection{Exploration-exploitation and \texorpdfstring{$\varepsilon$}{ε}-greedy policies}
@@ -405,7 +404,7 @@ optimal function?
 
 One way to deal with this tradeoff is to follow an
 \newconceptspec{$\varepsilon$-greedy policy}{$\varepsilon$-greedy Policy}.
-Recall from subsection \ref{subsection:optimal-policy} that optimal policies,
+Recall from \ffref{subsec:optimal-policy} that optimal policies,
 and ``optimal'' policies based on a sub-optimal value function, always take one
 action for any state. Instead of taking only that action, $\varepsilon$-greedy
 policies:
@@ -417,9 +416,9 @@ $\varepsilon$
 Where $\varepsilon$ is a parameter, $0\leq\varepsilon\leq 1$. Often,
 $\varepsilon=0.1$.
 
-(\cite[Section~2.2]{sutton1998introduction})
+\citep[Section~2.2]{sutton1998introduction}
 
-\subsection{Sarsa\label{subsection:sarsa}}
+\subsection{Sarsa\label{subsec:sarsa}}
 
 Suppose an agent knows the optimal value function, $V(s)$, and is in state $s$.
 How would it go about choosing its next action? Maybe it uses a
@@ -441,10 +440,10 @@ need a model of the environment.
 \end{equation}
 
 For this reason, methods that learn action-value functions are called
-\newconcept{model-free methods} (\cite[Subsection~21.3.2]{russell2009aima}).
+\newconcept{model-free methods} \citep[Subsection~21.3.2]{russell2009aima}.
 
 \begin{algorithm}[h]
-\caption{Sarsa (\cite[Section~6.4]{sutton1998introduction})}
+\caption{Sarsa \citep[Section~6.4]{sutton1998introduction}}
 \label{alg:sarsa}
 \begin{algorithmic}
 \State Initialize $Q(s, a)$ arbitrarily, for example $Q(s, a)=0 \; \forall
@@ -464,7 +463,7 @@ s\in\mathcal{S}$
 \end{algorithm}
 
 $\pi^\varepsilon_Q$ is an $\varepsilon$-greedy policy based on
-the optimal policy based on $Q$, as per equation \ref{eq:q-policy}. It is
+the optimal policy based on $Q$, as per \ffref{eq:q-policy}. It is
 possible to use other policies based on the optimal policy based on $Q$. However,
 the policy used must have a non-zero probability of choosing all the actions for
 convergence to the optimal policy to be guaranteed.
@@ -479,7 +478,7 @@ value and only account for the new value weighted by $\alpha$.
 Sarsa's name comes from the quintuple of values used in its update:
 $\langle s_t, a_t, r_{t+1}, s_{t+1}, a_{t+1}\rangle$.
 
-(\cite[Section~6.4]{sutton1998introduction})
+\citep[Section~6.4]{sutton1998introduction}
 
 \subsubsection{Function approximation}
 For interesting problems, it is usually infeasible to store the $Q$ function for
@@ -487,8 +486,8 @@ all states and values. Instead, we use a learned function that approximates $Q$.
 Desirable approximate functions not only store values close to those of the states and
 actions the agent has seen, but also \emph{generalise} to unseen states and
 actions. A very desirable method for learning such approximate functions is the
-use of \acfp{NN}, and \acfp{DQN} (subsection \ref{subsection:dqn}) are a version
-of Sarsa that use \acp{NN} for approximating the action-value function. 
+use of \acfp{NN}, and \acfp{DQN} (\ffref{subsec:dqn}) are a version
+of Sarsa that use \acp{NN} for approximating the action-value function.
 
 When using function approximation in Sarsa, the only step changed is the $Q$
 update step. Instead of updating a table with the learning rate, it updates the
@@ -500,11 +499,11 @@ present in the environment. They aim to make learning easier by giving the agent
 more frequent feedback. However, rewards added by shaping may change the
 behaviour of the agent from what would be the optimal behaviour with the original
 \ac{MDP}. Indeed, this happened while
-conducting naive learning experiments with shaping for this work (subsection
-\ref{subsection:reward-shaping}).
+conducting naive learning experiments with shaping for this work
+(\ffref{subsec:reward-shaping}).
 
 The following definitions and observations are taken from, and proved in,
-\cite{ng1999policy}.
+\citet{ng1999policy}.
 
 Let $\mathcal{M} = \langle \mathcal{S}, \mathcal{A},
 \mathcal{P}^a_{ss'}, \mathcal{R}^a_{ss'}, \gamma \rangle$ be the \ac{MDP} the
@@ -527,7 +526,7 @@ in $\mathcal{M}$ remain near-optimal policies in $\mathcal{M'}$: if $\left|
 V^\pi_M - V^*_M \right| < \varepsilon$, then $\left| V^\pi_{M'} - V^*_{M'}
 \right| < \varepsilon$.
 
-\section{Hierarchical Reinforcement Learning\label{section:hierarchical-rl}}
+\section{Hierarchical Reinforcement Learning\label{sec:hierarchical-rl}}
 
 Suppose Alice wants to eat a salad. She needs the ingredients, so, she needs to
 go to the grocery store. To accomplish that, she needs to get out of the house,
@@ -548,7 +547,7 @@ things) goes to either of the two places.
 \subsection{Options}
 
 How may we encode this helpful intuition into reinforcement learning agents?
-\cite{sutton1999between}, have an answer. The agent may take
+\citet{sutton1999between} have an answer. The agent may take
 \newconcept{options} instead of actions at every state. Options are courses of
 action that last one or more time steps, and follow their own policy. Options take
 other options and have their own policy, which can be improved every time they
@@ -629,7 +628,7 @@ $\mathcal{O}_s$.
     This describes the likelihood of reaching a state $s'$ from state $s$ when
     taking option $o$, discounted depending on the time taken to reach it. The
     usefulness of this term will be apparent in the \ac{SMDP}'s Bellman equation
-  (\ref{eq:smdp-bellman-q}).
+  (\ffref{eq:smdp-bellman-q}).
   \item The discount factor $\gamma$.
 \end{itemize}
 
@@ -654,7 +653,7 @@ And of course, we take the maximum action-value if we are defining the optimal p
 \end{equation}
 
 The Sarsa update looks like this (analogous to the Q-learning update from
-\cite[Section~3.2]{sutton1999between}):
+\citet[Section~3.2]{sutton1999between}):
 \begin{equation}
   Q(s_t, o_t) \gets (1-\alpha)Q(s_t, o_t) + \alpha \left[r_{t:t+k} + \gamma^k Q(s_{t+k}, o_{t+k}) \right]
 \end{equation}
@@ -667,26 +666,127 @@ Note that all these expressions reduce to their ordinary \ac{MDP} counterparts
 when the option corresponds to a primitive action.
 
 %DIJOUS
-\section{Search}
+\section{Search in deterministic \acp{MDP}}
 
-Get ideas from \cite{russell2009aima}.
-\subsection{Blind Planning}
+It can be desirable for the agent to act ``well'' on the first try, without
+having to interact with the environment and learn by trial and error. If the
+agent has a model of the environment, this becomes possible.
+
+This is effectively what \acl{VI} does (\ffref{subsec:VI}). However, if the
+\ac{MDP} has a deterministic transition model, a much more efficient class of
+solutions become possible: \newconcept{search} algorithms.
+
+\subsection{Search problem formulation}
+
+A problem can formally defined by the tuple $\langle \mathcal{S}, s_0,
+\mathcal{A}_s, f, \mathcal{S}_G, c \rangle$:
+
+\begin{itemize}
+  \item The set of states $\mathcal{S}$.
+  \item The actions available in each state $\mathcal{A}_s$.
+  \item An initial state $s_0\in\mathcal{S}$.
+  \item A deterministic transition function $f(s, a)$, $f : \mathcal{S}
+\times \mathcal{A} \mapsto \mathcal{S}$.
+  \item A non-empty set of goal states $\mathcal{S}_G \subseteq \mathcal{S}$.
+Often defined with a function that tests if a state is in $\mathcal{S}_G$.
+  \item A step cost function $c(s, a, s')$, $c : \mathcal{S} \times \mathcal{A}
+    \times \mathcal{S} \mapsto \mathbb{R}$.
+\end{itemize}
+
+Starting from the initial state $s_0$, the agent must find a
+\newconcept{solution}. A solution is a sequence of actions actions $a_1, a_2,
+\dots, a_n$ that ``leads to the goal''. Since the transition function is
+deterministic, a sequence of actions always brings the agent to the same state.
+Thus, the sequence of actions generates the sequence of states $s_1, s_2, \dots
+s_n$, where $s_n = f(s_{n-1}, a_n)$. That the sequence ``leads to the goal''
+means that $s_n \in \mathcal{S}_G$.
+
+If possible, we want an agent to find an \newconcept{optimal solution}, that is,
+one where the path has minimal cost. The cost of a path is the sum of the costs
+of all the state transitions taken, that is:
+\begin{equation}
+C(s_0,\dots,s_n) = \sum_{i=0}^{n-1}c(s_i, a_{i+1}, s_{i+1})
+\end{equation}
+
+(\cite[Section~3.1]{russell2009aima}, \cite{lipovetzky2015classical})
+
+Note that, since the transition is deterministic, we can write without loss of
+information $c(s, a) = c(s, a, f(s, a))$. Also, often the step cost is just
+$c(s,a)=1 \forall s, a$, so the path cost is the path length.
+
+\subsubsection{Analogy with \acp{MDP}}
+We can draw direct analogies between each element of a search problem and each
+element of an \ac{MDP}. Search problems can be seen as a special case of
+\acp{MDP}. Reducing a search problem to an \ac{MDP} means that we can create an
+\ac{MDP} formulation such that an optimal policy for that \ac{MDP} is also an
+optimal solution for the search problem. Reducing an \ac{MDP} to a search
+problem is analogous.
+
+For the following discussion, recall the formalisation of \acp{MDP} given in
+\ffref{subsec:MDP}. Also remember the types of \ac{SDP} from
+\ffref{subsec:considerations-sdp}, which apply to \ac{MDP} as well.
+
+The set of states $\mathcal{S}$ and the actions available in each state
+$\mathcal{A}_s$ are directly analogous. The initial state $s_0$ is very clear in
+episodic \acp{MDP}, and even in continuing \acp{MDP} the agent has to start
+interacting in some state. For the transition model, we can define
+$\mathcal{P}^a_{ss'} = 1$ if $s' = f(s, a)$ and otherwise $\mathcal{P}^a_{ss'} =
+0$.
+
+In \acp{MDP}, we seek to \emph{maximise} an expected reward function
+$\mathcal{R}^a_{ss'}$. In search problems, we seek to \emph{minimise} a cost
+function $c(s, a, s')$. We can reduce a search problem to an \ac{MDP} by
+defining $R^a_{ss'} = C - c(s, a, s')$, where $C$ is a constant. $C$ can be 0 if
+we allow negative rewards or costs, or it can be a number that bounds the cost
+function $C \geq c(s, a, s') \forall s,s' \in \mathcal{S}, a \in \mathcal{A}$.
+We can reduce a deterministic \ac{MDP} to a search problem by doing the
+inverse procedure: $c(s, a, s') = C -R^a_{ss'}$ with $C$ upper-bounding
+$R^a_{ss'}$.
+
+We can account for the discount rate $\gamma$ in the \ac{MDP} we are reducing by slightly
+modifying the search problem. We can redefine the path cost to be:
+\begin{equation}
+C(s_0,\dots,s_n) = \sum_{i=0}^{n-1} \gamma^i c(s_i, a_{i+1}, s_{i+1})
+\end{equation}
+
+We need only deal with the goal states now, $\mathcal{S}_G$. If we convert a
+search problem into an \ac{MDP}, we can make it an episodic \ac{MDP} and
+terminate it whenever a goal state would reached. But what if the \ac{MDP} is
+continuing?
+
+\fxwarning{Proof needed?}
+
+\subsubsection{The on-line setting}
+A solution to a search problem is a path that starts in the initial state and
+ends in the goal. Therefore, algorithms that solve search problems \emph{cannot
+terminate before reaching a goal state}. Thus, we cannot somehow create a search
+problem without a goal and solve it.
+
+We can instead use the \newconcept{on-line setting}
+\citep{lipovetzky2015classical}. At each time step of the would-be continuing
+\ac{MDP}, a new planning problem is created. Optimal paths to the goal are
+searched, but there is no goal. After a set amount of time, the search algorithm
+is terminated. The first action of the path with the least cost (so, the most
+reward) is taken.
+
+This approach also works for episodic \acp{MDP} where the goal may be too far to
+be tractable with a search algorithm.
+
+\subsection{Blind Search}
 BFS and friends
-\subsection{Heuristic Planning}
-A* and friends
+
 \subsection{\acl{IW}}
+talk about atomic vs structured goals and how IW takes advantage
 nir ijcai
-\subsection{Combining planning and learning}
-we use our friendly neighbor \cite{sutton1998introduction}
 
 
 %DIMECRES
 \section{\aclp{NN}}
 \subsection{Backpropagation}
 \subsection{\aclp{CNN}}
-\subsection{\aclp{DQN}\label{subsection:dqn}}
+\subsection{\aclp{DQN}\label{subsec:dqn}}
 
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../report"
-%%% End: 
+%%% End:

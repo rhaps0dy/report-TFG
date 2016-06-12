@@ -25,6 +25,38 @@
 \usepackage{algorithmicx}
 \let\Algorithm\algorithm
 \renewcommand\algorithm[1][]{\Algorithm[#1]\setstretch{1.25}}
+
+\usepackage[plain]{fancyref}
+% Change references from capital/normal letters
+\newcommand{\ffref}{\Fref}
+% Algorithm and subsection references
+\newcommand*{\fancyrefalglabelprefix}{alg}
+\newcommand*{\fancyrefsubseclabelprefix}{subsec}
+\frefformat{plain}{\fancyrefalglabelprefix}{%
+algorithm\fancyrefdefaultspacing#1%
+}
+\Frefformat{plain}{\fancyrefalglabelprefix}{%
+Algorithm\fancyrefdefaultspacing#1%
+}
+\frefformat{plain}{\fancyrefsubseclabelprefix}{%
+subsection\fancyrefdefaultspacing#1%
+}
+\Frefformat{plain}{\fancyrefsubseclabelprefix}{%
+Subsection\fancyrefdefaultspacing#1%
+}
+\frefformat{vario}{\fancyrefalglabelprefix}{%
+algorithm\fancyrefdefaultspacing#1 on page~#2%
+}
+\Frefformat{vario}{\fancyrefalglabelprefix}{%
+Algorithm\fancyrefdefaultspacing#1 on page~#2%
+}
+\frefformat{vario}{\fancyrefsubseclabelprefix}{%
+subsection\fancyrefdefaultspacing#1 on page~#2%
+}
+\Frefformat{vario}{\fancyrefsubseclabelprefix}{%
+Subsection\fancyrefdefaultspacing#1 on page~#2%
+}
+
 \usepackage{algpseudocode}
 \algblockdefx[RepeatComment]{RepeatComment}{EndRepeatComment}
     [1][]{\textbf{repeat} #1}
@@ -70,7 +102,7 @@
 \newcommand{\argmin}{\operatornamewithlimits{arg\,min}}
 \newcommand{\argmax}{\operatornamewithlimits{arg\,max}}
 
-\input{Content/Acronyms.tex}
+\subimport{Content/}{Acronyms.tex}
 
 \begin{document}
 \pagenumbering{roman}
@@ -91,9 +123,9 @@
 \listoftables
 \newpage
 %\lhead{Abbreviations}
-\addcontentsline{toc}{chapter}{Abbreviations}
 \thispagestyle{empty}
 \printacronyms[include-classes=abbrev,name=Abbreviations,heading=chapter*]
+\addcontentsline{toc}{chapter}{Abbreviations}
 
 \pagenumbering{arabic}
 
@@ -105,6 +137,6 @@
 
 \newpage
 \thispagestyle{empty}
-\addcontentsline{toc}{chapter}{Bibliography}
 \printbibliography
+\addcontentsline{toc}{chapter}{Bibliography}
 \end{document}

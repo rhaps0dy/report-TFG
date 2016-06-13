@@ -354,7 +354,7 @@ $\mathcal{R}^a_{ss'}$, and the parameter $\gamma$).
 turning the optimal value Bellman equation (\ffref{eq:bellman-v-optimal}) into an
 update rule for the table. \ac{VI} is described in \ffref{alg:value-iteration}.
 
-\begin{algorithm}
+\begin{algorithm}[hbtp]
 \begin{algorithmic}
 \State Initialize $V(s)$ arbitrarily, for example $V(s)=0 \; \forall s\in\mathcal{S}$
 \Repeat
@@ -362,7 +362,7 @@ update rule for the table. \ac{VI} is described in \ffref{alg:value-iteration}.
   \For{each $s\in\mathcal{S}$}
     \State $v \gets V(s)$
     \State $V(s) \gets \max_{a\in\mathcal{A}_s}\sum_{s' \in \mathcal{S}}\mathcal{P}^a_{ss'} \left[\mathcal{R}^a_{ss'} + \gamma V^\pi(s') \right]$
-    \State $\Delta \gets \max(\Delta, \left|V(s) - v \right| $
+    \State $\Delta \gets \max(\Delta, \left|V(s) - v \right|)$
     \EndFor
 \Until{$\Delta < \theta$ a small constant}
 \State Output optimal policy using \ffref{eq:optimal-policy-value}
@@ -486,7 +486,7 @@ all states and values. Instead, we use a learned function that approximates $Q$.
 Desirable approximate functions not only store values close to those of the states and
 actions the agent has seen, but also \emph{generalise} to unseen states and
 actions. A very desirable method for learning such approximate functions is the
-use of \acfp{NN}, and \acfp{DQN} (\ffref{subsec:dqn}) are a version
+use of \acfp{NN}, and \acfp{DQN} \citep{mnih2015human} are a version
 of Sarsa that use \acp{NN} for approximating the action-value function.
 
 When using function approximation in Sarsa, the only step changed is the $Q$
@@ -701,18 +701,29 @@ Thus, the sequence of actions generates the sequence of states $s_1, s_2, \dots
 s_n$, where $s_n = f(s_{n-1}, a_n)$. That the sequence ``leads to the goal''
 means that $s_n \in \mathcal{S}_G$.
 
+The transition function $f$ can be seen as defining a directed graph: the
+possible states are the nodes, and the actions are directed edges. Any possible sequence of
+states and actions is a path of this graph, so such sequences are also called
+\newconcept{paths}. We can see the step cost function as a weight on each edge
+of the graph.
+
 If possible, we want an agent to find an \newconcept{optimal solution}, that is,
 one where the path has minimal cost. The cost of a path is the sum of the costs
 of all the state transitions taken, that is:
 \begin{equation}
 C(s_0,\dots,s_n) = \sum_{i=0}^{n-1}c(s_i, a_{i+1}, s_{i+1})
 \end{equation}
+With this definition of path cost, we can view a search problem as finding a
+minimum weight path from $s_0$ to any state in $\mathcal{S}_G$ on the directed
+graph. Thus, graph minimum path search algorithms and algorithms for search
+problems are roughly the same. Indeed, we can use the well-known Dijkstra
+algorithm for finding optimal solutions to search problems.
 
-(\cite[Section~3.1]{russell2009aima}, \cite{lipovetzky2015classical})
+(\cite[Section~3.1]{russell2009aima})
 
 Note that, since the transition is deterministic, we can write without loss of
 information $c(s, a) = c(s, a, f(s, a))$. Also, often the step cost is just
-$c(s,a)=1 \forall s, a$, so the path cost is the path length.
+$c(s,a)=1 \forall s, a$, so the path cost is the path length. 
 
 \subsubsection{Analogy with \acp{MDP}}
 We can draw direct analogies between each element of a search problem and each
@@ -763,28 +774,233 @@ terminate before reaching a goal state}. Thus, we cannot somehow create a search
 problem without a goal and solve it.
 
 We can instead use the \newconcept{on-line setting}
-\citep{lipovetzky2015classical}. At each time step of the would-be continuing
-\ac{MDP}, a new planning problem is created. Optimal paths to the goal are
-searched, but there is no goal. After a set amount of time, the search algorithm
-is terminated. The first action of the path with the least cost (so, the most
-reward) is taken.
+(used in \citet{lipovetzky2015classical}, original source unknown). At each time
+step of the would-be continuing \ac{MDP}, a new planning problem is created.
+Optimal paths to the goal are searched, but there is no goal. After a set amount
+of time, the search algorithm is terminated. The first action of the path with
+the least cost (so, the most reward) is taken.
 
-This approach also works for episodic \acp{MDP} where the goal may be too far to
-be tractable with a search algorithm.
+This approach can also be used for episodic \acp{MDP} where the goal may be too
+far to be tractable with a certain search algorithm.
 
-\subsection{Blind Search}
-BFS and friends
+\subsection{\acl{BFS}}
+\acf{BFS} is one of the basic algorithms for solving search problems.
+The algorithm is breadth-first tree traversal, but adapted to graphs
+in general. We show it in \ffref{alg:bfs}.
 
-\subsection{\acl{IW}}
-talk about atomic vs structured goals and how IW takes advantage
-nir ijcai
+The algorithm uses the following strategy: first it expands the root node, then
+each of its successors, then each of the successors' successors, \dots At each
+iteration, it expands the shallowest node that in the frontier, with ties broken
+by order of expanding them. To \newconcept{expand} a node is to check if any of
+its children is a goal and add them to the frontier. The \newconcept{frontier}
+is a data structure, in this case a \ac{FIFO} queue, that keeps the nodes we
+will expand in the future.
 
+\ac{BFS} is an instance of an \newconcept{uninformed search} (or
+\newconcept{blind search}) algorithm. It has no information about states beyond
+what is provided in the problem definition. This is in contrast to
+\newconcept{informed} or \newconcept{heuristic} search algorithms, that have
+some domain knowledge about which expanded nodes are more promising.
+
+\fxwarning{Expand or erase, depending on what is necessary}
+Note that \ac{BFS} always finds a solution (it is \newconcept{complete}), if
+there is one and it is not terminated prematurely. It is only an optimal
+solution if the path cost is a non-decreasing function of path length, which is
+true when all actions have the same cost. Its space and time complexity are $O(b^d)$
+
+\citep[Sections~3.3,~3.4]{russell2009aima}
+
+\begin{algorithm}[hbtp]
+\begin{algorithmic}
+  \Function{Solution}{$node$}
+    \If{$node.\textsc{Action}=\varnothing$}
+      \Return an empty list
+    \EndIf
+      \State $s \gets \Call{Solution}{node.\textsc{Parent}}$
+      \State \Return $\Call{List-Concat}{s, node.\textsc{Action}}$
+  \EndFunction
+  \Function{Child-Node}{$problem, parent, action$}
+    \State \Return a node with:
+      \begin{itemize}
+        \item[] $\textsc{State} = problem.\Call{Result}{parent.\textsc{State}, action}$,
+        \item[] $\textsc{Parent} = parent$, $\textsc{Action}=action$,
+        \item[] $\textsc{Path-Cost} = parent.\textsc{Path-Cost} \,+\,
+          problem.\Call{Step-Cost}{parent.\textsc{State}, action}$
+      \end{itemize}
+  \EndFunction
+  \Function{Breadth-First-Search}{$problem$}
+    \State $node \gets$ a node with:
+      \begin{itemize}
+        \item[] $\textsc{State} = problem.\textsc{Initial-State}$, $\textsc{Path-Cost}=0$,
+        \item[] $\textsc{Parent} = \varnothing$, $\textsc{Action} = \varnothing$
+      \end{itemize}
+    \If{$problem.\Call{Goal-Test}{node.\textsc{State}}$}
+      \Return $\Call{Solution}{node}$
+    \EndIf
+    \State $frontier \gets$ an empty \ac{FIFO} queue
+    \State $frontier \gets \Call{Queue-Insert}{frontier, node}$
+    \State $explored \gets$ an empty set
+    \Loop
+      \If{$\Call{Empty?}{frontier}$}
+        \Return failure
+      \EndIf
+      \State $node \gets \Call{Pop}{frontier}$ \Comment Get the shallowest node
+      in $frontier$.
+      \State $explored \gets \Call{Set-Insert}{explored, node}$
+      \For{\textbf{each} $action$ \textbf{in} $problem.\Call{Actions}{node.\textsc{State}}$}
+        \State \Comment Expand each of the node's children.
+        \State $child \gets \Call{Child-Node}{problem, node, action}$
+        \If{$child.\textsc{State}$ is not in $explored$ or $frontier$}
+          \If{$\Call{Goal-Test}{problem, child.\textsc{State}}$}
+            \State \Return $\Call{Solution}{child}$
+          \EndIf
+          \State $frontier \gets \Call{Queue-Insert}{frontier, child}$
+        \EndIf
+      \EndFor
+    \EndLoop
+  \EndFunction
+\end{algorithmic}
+\caption{\acl{BFS} \citep[Sections~3.3,~3.4]{russell2009aima}}
+\label{alg:bfs}
+\end{algorithm}
+
+\subsection{Planning and \acl{IW}}
+The \ac{BFS} search algorithm from the previous section did not use information
+about the structure of the states or the goal. \ac{BFS} only checks if a state
+is equal to another and if it is a goal state. We say that the state
+representation is \newconcept{atomic}.
+
+\acf{IW}, in contrast, uses a \newconcept{factored} state and goal
+representation. This means that the states are represented by vectors of values,
+and that goal checking checks conditions on those values. This may give us no
+more information than when checking whether an atomic state is a goal, but often
+goals in factored state representations check only one or two values. Search
+algorithms and problems with factored state representation are called
+\newconcept{planning} algorithms and problems.
+\citep[Sections~2.4.7,~3.0]{russell2009aima}
+
+\subsubsection{The problem formulation}
+
+\ac{IW} was introduced by \citet{lipovetzky2012width}. For them, a planning
+problem is a tuple $\langle F, I, \mathcal{A}, G, f \rangle$:
+\begin{itemize}
+  \item $F$ is the set of boolean variables of the problem. Each element of $F$
+is either true or false in a given state, and a state is represented by the
+truth value of each of the variables. It is a representation of the finite set
+of states $\mathcal{S}$ of a search problem.
+\item $I$ is the set $I \subseteq F$ of variables that are true in the initial
+  state. It is thus a representation of the initial state $s_0$.
+\item $\mathcal{A}_f$ is the set of available actions in each state, that is,
+  each possible combination of variables.
+\item $G$ is the set $G \subseteq F$ of variables that are true in the goal
+  states of the search problem, $S_G$.
+\item The state transition function $f$ is not explicitly stated by them, but
+\ac{IW} uses it.
+\end{itemize}
+Unstated is the cost step function, which is assumed to be $c(s,a,s') = 1$, so
+that the cost is always the path length.
+
+\subsubsection{The algorithm}
+
+We describe \ac{IW} in \ffref{alg:iterated-width}. \ac{IW} is several successive
+runs of $\textsc{IW}(i)$ for $i=1,2,\dots$ until one of the runs returns a solution.
+$\textsc{IW}(i)$ is a modified version of \ac{BFS}, the difference is that it
+\newconcept{prunes} some states, that is, it avoids putting them in the frontier
+after expanding them. $\textsc{IW}(i)$ prunes a node $n$ if its \newconcept{novelty
+  measure} is larger than $i$.
+
+The novelty measure of a node is the size of the smallest \newconcept{$i$-tuple}
+in it that has not been ``seen'' before in the search. An $i$-tuple is a tuple of
+$i$ variables. That a tuple has been ``seen'' before means that, in a previously
+searched state (that is, one that is in the $explored$ set), all of the boolean
+variables in that tuple have the same value as they do in the current state. See
+also the novelty measure example in \ffref{tab:novelty-example}.
+
+Checking that the novelty measure is not greater than the current maximum width
+is carried out in the $\textsc{Check-Novelty}$ function in
+\ffref{alg:iterated-width}.
+
+\begin{table}[hbtp]
+\begin{center}
+\newcommand{\tp}[1]{\langle #1 \rangle}
+\begin{tabular}{c|ccc|cl}
+State & $f_1$ & $f_2$ & $f_3$ & Novel tuples &  Novelty \\
+  \hline
+  1 & F & F & F & $\tp{},\tp{f_1},\tp{f_2},\tp{f_3},\tp{f_1,f_2},$ & 0\\
+  & & & & $\tp{f_2,f_3},\tp{f_1,f_3},\tp{f_1,f_2,f_3}$ & \\
+  2 & F & T & F & $\tp{f_2},\tp{f_1,f_2},\tp{f_2,f_3},\tp{f_1,f_2,f_3}$ & 1 \\
+  3 & T & T & F & $\tp{f_1},\tp{f_1,f_2},\tp{f_1,f_3},\tp{f_1,f_2,f_3}$ & 1\\
+  4 & T & F & F & $\tp{f_1,f_2},\tp{f_1,f_2,f_3}$ & 2\\
+  5 & T & F & T & $\tp{f_3},\tp{f_1,f_3},\tp{f_2,f_3},\tp{f_1,f_2,f_3}$ & 1 \\
+  6 & T & F & T & none & $4 = |F|+1$ \\
+  7 & F & F & T & $\tp{f_1,f_2,f_3}$ & 3 \\
+\end{tabular}
+
+\end{center}
+\caption[Novelty measure example]{Example that shows the novelty measure for
+each new state, assuming they are expanded from top to
+bottom. $f_i$ are the problem's variables, $f_i\in F$.}
+\label{tab:novelty-example}
+\end{table}
+
+\citet{lipovetzky2012width} define the \newconcept{width} $w$ of a planning problem
+to be the minimum $i$ such that $\textsc{IW}(i)$ finds an optimal solution for
+that problem.\footnote{The paper, as often papers do, is actually written in the
+reverse direction. First, the authors formally define width, and then using that notion
+they craft the \ac{IW} algorithm.} Then they find, experimentally, that $w$ is
+small $w \leq 2$ for many planning problems in which the goal is restricted to a
+single variable, that is, $|G|=1$. Therefore, \ac{IW} is quite efficient
+for problems with low width, since $\textsc{IW}(i)$ has complexity $O(|F|^i)$.
+
+\begin{algorithm}[hbtp]
+\newcommand{\nchoosek}[2]{\left(\begin{array}{c}#1 \\ #2 \end{array}\right)}
+\begin{algorithmic}
+  \Function{Update-Novelty}{$seen\_tuples, width, state$}
+    \ForAll{tuples of variables, $t$, of size $width$}
+      \State $seen\_tuples[t, \Call{Value-Of}{t}] \gets true$
+    \EndFor
+    \State \Return $seen\_tuples$
+  \EndFunction
+  \Function{Check-Novelty}{$seen\_tuples, width, state$}
+    \ForAll{tuples of variables, $t$, of size $width$}
+      \If{$seen\_tuples[t, \Call{Value-Of}{t}] = false$}
+       \Return $true$
+      \EndIf
+    \EndFor
+    \State \Return $false$
+  \EndFunction
+  \Function{IW}{$problem=\langle F, I, \mathcal{A}, G, f \rangle, i$}
+    \State $seen\_tuples \gets$ map table from all the possible
+      $width$-tuple--value pairs to a boolean. Takes up $\nchoosek{|F|}{width}\cdot
+      2^i$ bits. Initialize to all $false$.
+    \State $\Call{Update-Novelty}{seen\_tuples, i, I}$
+    \State Perform \ac{BFS} (\ffref{alg:bfs}), with the following modification.
+    \begin{itemize}
+      \item[] When inserting a node to the frontier: only do so if
+        $\Call{Check-Novelty}{seen\_tuples, i, node.\textsc{State}} = true$. Then,
+        update $seen\_tuples \gets \Call{Update-Novelty}{seen\_tuples, i,
+        node.\textsc{State}}$.
+    \end{itemize}
+    \State \Return the return value of the performed \ac{BFS}.
+  \EndFunction
+  \Function{Iterated-Width}{$problem=\langle F, I, \mathcal{A}, G, f \rangle$}
+    \State $i \gets 1$
+    \Repeat
+      \State $r \gets \Call{IW}{problem, i}$
+      \State $i \gets i+1$
+    \Until{$r$ is not failure or $i>|F|$}
+    \State \Return $r$
+  \EndFunction
+\end{algorithmic}
+\caption{\acl{IW} \citep{lipovetzky2012width}}
+\label{alg:iterated-width}
+\end{algorithm}
 
 %DIMECRES
-\section{\aclp{NN}}
-\subsection{Backpropagation}
-\subsection{\aclp{CNN}}
-\subsection{\aclp{DQN}\label{subsec:dqn}}
+%\section{\aclp{NN}}
+%\subsection{Backpropagation}
+%\subsection{\aclp{CNN}}
+%\subsection{\aclp{DQN}\label{subsec:dqn}}
 
 %%% Local Variables:
 %%% mode: latex

@@ -92,6 +92,8 @@ Subsection\fancyrefdefaultspacing#1 on page~#2%
 \end{figure}
 }
 
+\usepackage[final]{pdfpages}
+
 \usepackage{mfirstuc} % capitalisewords
 
 %\newcommand{\newconceptspec}[2]{\emph{#1}\marginpar{\footnotesize\textsc{#2}}}
@@ -106,6 +108,7 @@ Subsection\fancyrefdefaultspacing#1 on page~#2%
 
 \begin{document}
 \pagenumbering{roman}
+%\includepdf[pages={1}]{Content/cover.pdf}
 %\input{Content/Title.tex}
 \onehalfspacing
 %\input{Content/Acknowledgements.tex}

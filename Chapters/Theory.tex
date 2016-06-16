@@ -493,14 +493,14 @@ When using function approximation in Sarsa, the only step changed is the $Q$
 update step. Instead of updating a table with the learning rate, it updates the
 function being learned, in a manner that depends on the function.
 
-\subsection{Shaping}
+\subsection{Shaping\label{subsec:shaping}}
 Shaping is the practice of giving an agent intermediate rewards that are not
 present in the environment. They aim to make learning easier by giving the agent
 more frequent feedback. However, rewards added by shaping may change the
 behaviour of the agent from what would be the optimal behaviour with the original
 \ac{MDP}. Indeed, this happened while
 conducting naive learning experiments with shaping for this work
-(\ffref{subsec:reward-shaping}).
+(\ffref{subsec:methodology-shaping}).
 
 The following definitions and observations are taken from, and proved in,
 \citet{ng1999policy}.
@@ -519,6 +519,7 @@ if it is a \newconcept{potential-based function}. That is, there exists a
 potential function $\phi$ such that:
 \begin{equation}
   F(s, a, s') = \gamma \phi(s') - \phi(s)
+  \label{eq:shaping-reward}
 \end{equation}
 
 Potential-based reward functions are robust: near-optimal policies
@@ -767,7 +768,7 @@ continuing?
 
 \fxwarning{Proof needed?}
 
-\subsubsection{The on-line setting}
+\subsubsection{The on-line setting\label{subsec:online-setting}}
 A solution to a search problem is a path that starts in the initial state and
 ends in the goal. Therefore, algorithms that solve search problems \emph{cannot
 terminate before reaching a goal state}. Thus, we cannot somehow create a search
@@ -864,7 +865,7 @@ true when all actions have the same cost. Its space and time complexity are $O(b
 \label{alg:bfs}
 \end{algorithm}
 
-\subsection{Planning and \acl{IW}}
+\subsection{Planning and \acl{IW}\label{subsec:iterated-width}}
 The \ac{BFS} search algorithm from the previous section did not use information
 about the structure of the states or the goal. \ac{BFS} only checks if a state
 is equal to another and if it is a goal state. We say that the state

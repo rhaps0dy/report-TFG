@@ -82,7 +82,22 @@ screens are not numbered in the game. The player starts in room 1 and finishes
 in room 15.\label{fig:montezuma-map}}
 \end{figure}
 
-\subsection{Reverse-engineering \acl{MR}}
+\subsection{Memory layout of the Atari 2600}
+The Atari 2600 uses the 6507 \ac{CPU}, which can address $8\,$KB of memory.
+Addresses range from 0x0000 to 0x1FFF. Addresses larger than 0x1000, included,
+are mapped to the \ac{ROM} cartridge that contains the code of the game.
+Addresses lower than that are used for drawing to screen, looking at the
+controller input, \dots and, most importantly, the \ac{RAM}. The 2600 has only
+128 bytes of \ac{RAM}, which are addressed in the range 0x0080--0x00FF, both
+included. \citep{atarispec}
+
+Throughout this document we will prefix a number with ``0x'' if it is expressed
+in base 16. If a described memory position has four hexadecimal digits, it is an
+absolute processor address. Otherwise, it is assumed to be in the range
+0x0000--0x00FF.
+
+
+\subsection{Reverse-engineering \acl{MR}\label{subsec:rev-eng-mr}}
 We used the \acl{ALE} (\cite{bellemare2013arcade}) to take several simultaneous
 screen and \ac{RAM} snapshots. We usually took 5 to 10 snapshots in the space of
 1 or 2 seconds, while performing certain action in the game. Then, we looked at
@@ -104,15 +119,6 @@ circumstances, and are probably editable in the middle of the computations
 within a frame. However, their value has been observed only going back to what
 it was if modified between frames.
 
-\fxwarning{Explain the Atari's RAM, explain Panama Joe}
-\fxwarning{Talk about the RAM of the Atari having 128 bytes and the ones
-  relevant are 0x80 0xff. Also about the ROM}
-\fxwarning{TAlk about MR.
-There seem to be two sprites drawn to screen: one "key" and one "skull", named
-after them in the first screen. We will call the first "collectible sprite", but
-it can be a monster too}
-
-
 \begin{table}[hbtp]
 \begin{center}
 \newcommand{\ram}[2]{\hyperref[ram:#1]{#2*}}
@@ -122,7 +128,7 @@ it can be a monster too}
 \begin{tabular}{c|cccccccccccccccc}
   & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & A & B & C & D & E & F \\
 \hline
-8 &   &   &   &\rame{screen}{83}&   &   &   &   &   &   &   &   &   &   &   &   \\
+8 &\rame{frame}{80}&   &   &\rame{screen}{83}&   &   &   &   &   &   &   &   &   &   &   &   \\
 9 &   &   &   &\rame{score}{93}& \rame{score}{94}& \rame{score}{95}&   &   &   &   &   &   &   &   &\ram{player-sprite}{9E}&   \\
 A &   &   &   &   &   &   &   &   &   &   &\rame{x}{AA}&\rame{y}{AB}&   &   &   &   \\
 B &   &\rame{collectable}{B1}&\rame{collectable-colour}{B2}&  &\rame{look-lr}{B4}&  &   &   &   &   &   \rame{lives}{BA} & & & &\rame{skull-animation}{BE}&\rame{skull-jump-y}{BF}\\
@@ -161,7 +167,7 @@ level has are \n{94} or \n{9C}, \n{C0}, and \n{EB}.
 
 \entrye{jump}{D6} The current frame of the jump. Set to \n{FF} when in the
 ground. Set to \n{13} when the jump starts. When jumping, the game adds to the Y
-of Panama Joe the values from the array starting at memory position \n{E47}.
+of Panama Joe the values from the array starting at memory position \n{1E47}.
 Thus, if set to higher than \n{13}, the game behaves oddly. It also can be reset
 to whatever value at any time, causing Panama Joe to start a jump, even in
 mid-air.
@@ -184,18 +190,23 @@ corruptions. The objects and their associations are:
 torch & sword & sword & key & key & key & key & mallet \\
 \end{tabular}
 \end{center}
-If the inventory's value is changed, collecting items the normal way stops
+If the inventory's value is changed, collecting items by touching them stops
 working.
 
 \entry{doors}{C2 (bits 3, 2)} Whether the doors in the screen are closed or
 open. Only means this in screens 1, 5 and 17. When the bit is set, the door is
 closed. Bit 3 controls the door in the left, bit 2 the one in the right.
 
+\entrye{frame}{80} The current frame. This memory position starts the game at
+\n{00} and increments by one every frame.
+
 \entrye{skull-animation}{BE} The frame of the rotating skull's animation, in
 screens where there is one.
 
 \entrye{skull-rotate-x}{AF} X of the rotating skull, when there is one (screens
-1 and 18). It is not in the same scale as the player's X.
+1 and 18). It is not in the same scale as the player's X. Its values range from
+0x16 to 0x48, inclusive.
+
 \entrye{skull-rotate-y}{AE} Y of the rotating skull. Also in its own scale, and
 cannot take it away from its floor.
 
@@ -245,25 +256,333 @@ seem to affect anything.
 \end{enumerate}
 }
 
-\subsection{Reward shaping\label{subsec:reward-shaping}}
+\section{Learning}
+\subsection{State-action representation}
+Using the reverse-engineered memory layout (\ffref{subsec:rev-eng-mr}), we
+crafted a state representation of screen 1 in \acl{MR}. This
+representation is aliased several times in the actual game's state, but it
+contains enough information to satisfy the Markov property (\ffref{subsec:MDP}).
+
+{
+\newcommand{\n}[1]{\text{0x#1}}
+\newcommand{\ram}[1]{\text{\ac{RAM}}(\n{#1})}
+
+The state representation is a vector $v_1,\dots,v_6$ of 6 values, calculated
+based on the \ac{RAM} of the game state in the emulator and on the previous
+state. We will use $\ram{x}$ to denote the current value of the memory position
+$x$. The intervals of possible values are over the natural numbers.
+
+\begin{itemize}
+  \item Skull position: $v_1 = \ram{AF} - 0x16$, $v_1 \in [0, 51)$.
+  \item Skull direction: $v_2 = 1$ initially, set to 0 if $v_1=0$, set to 1 if
+    $v_1=50$, otherwise keep the same value as the last state.
+  \item Joe's X: $v_3 = \ram{AA}$, $v_3 \in [0, 256)$.
+  \item Joe's Y: $v_4 = \ram{AB}$, $v_4 \in [0, 256)$.
+  \item Whether Joe has the key: $v_5 =
+    \begin{cases}
+      0 &\quad\text{if }\textsc{Bitwise-And}(\ram{C1}, 0x1E) = 0 \\
+      1 &\quad\text{otherwise}
+    \end{cases}$
+  \item Whether Joe will die upon touching the ground: $v_6 =
+    \begin{cases}
+      0 &\quad\text{if }\ram{D8} \geq 8 \\
+      1 &\quad\text{otherwise}
+    \end{cases}$
+\end{itemize}
+}
+
+We will use the restricted set of 8 actions of \acl{MR}.
+
+In total, we have $\prod_i |\text{set}(v_i)| = 51 \cdot 2 \cdot 256 \cdot 256
+\cdot 2 \cdot 2 = 26\,738\,688$ possible states, which multiplied by 8
+restricted actions in \acl{MR} gives us $213\,909\,504$ possible state-action
+pairs. If we store the value of $Q(s, a)$ for each of them as a 32-bit floating
+point number, we use $(213\,909\,504 \cdot 4 \,\text{bytes}) / 10^6 \,\text{bytes}
+\approx 855\,\text{MB}$. This is a large, but not outlandish, amount of memory.
+
+\subsection{Shaping function\label{subsec:shaping-function}}
+One of the main problems with \acl{MR} is that the rewards are very far apart.
+To eliminate this hurdle, we used shaping as explained in \ffref{subsec:shaping}.
+
+We define our potential function $\phi : \mathcal{S} \mapsto [1,
+2]_\mathcal{R}$, $\phi(\langle v_1,\dots,v_6\rangle ) = 1 +
+\textsc{Phi}(v_3,v_4,v_5,v_6)$. \footnote{The subscript $\mathbb{R}$ means the interval is
+defined over the real numbers. If no subscript is in the interval, assume it is
+over $\mathbb{N}$.} \textsc{Phi} is described in
+\ffref{alg:shaping}.
+
+The agent will receive positive rewards for climbing potential. But why is our function
+function $\phi$ always positive? In the shaped \ac{MDP}, the additional reward
+is given by (\ffref{subsec:shaping}):
+\begin{equation}
+  F(s, a, s') = \gamma \phi(s') - \phi(s)
+  \tag{\ref{eq:shaping-reward} revisited}
+\end{equation}
+Consider the case where $\phi(s) = \phi(s')$. Then, if $\phi(s) < 0$, $F(s, a,
+s') > 0$! Our agent is rewarded for doing nothing and remaining in a ``bad''
+position, and will prolong the episode as much as possible without moving
+towards where we are interested. In contrast, if $\phi(s) > 0$, the agent will
+be incentivised to remain in that potential as little as possible.
+
+The function \textsc{Phi} takes a few seconds to compute for all values of
+$v_3,v_4,v_5$, as we do and cache before running Sarsa. A depiction of $\phi$ and
+\textsc{Phi} for all values of $v_3,v_4,v_5$ is shown in \ffref{fig:shaping}.
+
+\subsubsection{\texorpdfstring{Explanation of $\phi$}{Explanation of φ}}
+\textsc{Dist} is Euclidean distance with the $y$ scaled, analogous to the
+equation of an ellipse.
+
+{
+\newcommand{\pointt}[1]{\langle #1 \rangle}
+
+\textsc{Project} projects the point $\pointt{x_1,y_1}$ to the line defined by
+$\pointt{x_2,y_2}$ and $\pointt{x_2',y_2'}$, perpendicularly. The value it
+returns comes from the system of equations: $x_1+v_{x_1}t_1 = x_2+v_{x_2}t_2$,
+$y_1+v_{y_1}t_1 = y_2+v_{y_2}t_2$.
+
+$\textsc{Progress} : [0,256)_\mathbb{N}^2 \times ([0, 256)_\mathbb{N}^2)^+
+\mapsto [0,1]_\mathbb{R}$ measures the amount of progress of a point $p$ along a
+polygonal line. Let $p'$ be the point in the line closest to $p$. The progress
+is the length of the line from the first point of the line to $p'$ divided by
+the total length of the line. However, if $p$ is too far from the line
+($\textsc{Dist}(p, p') > 10$), the progress is 0.
+
+Finally, $p[0]$ and $p[1]$ are sequences of points determining a polygonal line
+in the direction we want Joe to move in, before and after getting the key,
+respectively. Note that the end of $p[0]$ coincides with the start of $p[1]$,
+reversed.
+
+
+\begin{algorithm}[hbtp]
+\begin{algorithmic}
+\Function{Dist}{$\pointt{x_1,y_1}, \pointt{x_2,y_2}$}
+\State \Return $\sqrt{(x_2-x_1)^2 + \left( \frac{(y_2-y_1)}{2}\right)^2}$
+\EndFunction
+\Function{Project}{$\pointt{x_1,y_1},\pointt{x_2,y_2},\pointt{x_2',y_2'}$}
+\State $v_{x_2} = x_2' - x_2$,~~~$v_{y_2} = y_2' - y_2$
+\State $v_{x_1} = -v_{y_2}$,~~~$v_{y_1} = v_{x_2}$
+\State \Return $\left( v_{x_1}(y_2-y_1) - v_{y_1}(x_2-x_1) \right) /
+\left( v_{y_1}v_{x_2} - v_{x_1}v_{y_2} \right)$
+\EndFunction
+\Function{Progress}{$\pointt{x,y} , [p_1=\pointt{x_1, y_1}, p_2= \pointt{x_1,
+y_1}, \dots, p_n]$}
+  \State $\forall i \in [1, n], \; t_i = 0$
+  \State $\forall i \in [1, n), \; (p_{n+i}, t_{n+i}) =
+    \Call{Project}{\pointt{x, y},p_i, p_{i+1}}$
+  \State $m = \argmin_{\,i \in [1, 2n) \text{~s.t.~} t_i \leq 1} \Call{Dist}{\pointt{x, y}, p_i}$
+  \If{$\Call{Dist}{\pointt{x,y}, p_m} > 10$}
+    \State \Return 0
+  \EndIf
+  \State $\forall j \in [1, n], \; \text{len}_j = \sum_{i=1}^{j-1} \Call{Dist}{p_i, p_{i+1}}$
+  \Comment Note that $\text{len}_1 = 0$
+  \If{$m \leq n$}
+    \State \Return $\text{len}_m \,/\, \text{len}_n$
+  \Else
+    \State \Return $(\text{len}_{m-n} + t_m\cdot (l_{m+1} - l_m)) \, / \, \text{len}_n$
+  \EndIf
+\EndFunction
+\Function{Phi}{$v_3,v_4,v_5,v_6$}
+\State \Return $\begin{cases}
+  0 &\quad\text{if }v_6=1 \\
+  \Call{Progress}{\pointt{v_3,v_4}, p[v_5]} &\quad\text{otherwise}
+  \end{cases}$
+\EndFunction
+\State $p[0] = [\pointt{100, 201}, \pointt{133, 201}, \pointt{133, 148},
+\pointt{21, 148}, \pointt{21, 192}, \pointt{9, 207}]$
+\State $p[1] = [\pointt{9, 207}, \pointt{21, 192}, \pointt{21, 148}, \pointt{133,
+148}, \pointt{133, 201}, \pointt{72, 201}, \pointt{72, 251}, \pointt{153, 251}]$
+\end{algorithmic}
+\caption{The potential function for shaping.}
+\label{alg:shaping}
+\end{algorithm}
+
+
 \begin{figure}[hbtp]
 \begin{center}
-\noindent\makebox[\textwidth]{\includegraphics[width=\paperwidth - 1in]{img/shaping.pdf}}
+\includegraphics[width=\textwidth]{img/shaping.pdf}
 \end{center}
-\caption{The shaping potential field used, before and after grabbing the
-key.\label{fig:shaping}}
+\caption[The potential function $\phi$ field used for shaping]{The potential
+  function $\phi$ field used for shaping. From left to right: $v_5=0$, $v_5=1$,
+  reference screenshot from the game. Vertical axis is $v_4$, horizontal axis
+  is $v_3$. Yellow is $\phi(\cdot)=2$, deep purple is $\phi(\cdot)=1$.\label{fig:shaping}}
 \end{figure}
-\begin{equation}
-  t_1 = \frac{v_{x_2}(y_1-y_2) - v_{y_2}(x_1-x_2)}{v_{y_2}v_{x_1} - v_{x_2}v_{y_1}}
-\end{equation}
+}
+
 \section{Planning}
-\subsection{\acl{IW}(1)}
-\subsection{\acl{IW}(3) on location}
-\subsection{\acl{IW}(3) on location with heuristic}
-\section{Learning}
-\subsection{Shaped tabular Sarsa}
-\subsection{Task by task \acs{DQN}}
-\subsection{Tabular Sarsa combined with planning}
+\acl{IW} was first applied to Atari games by \citet{lipovetzky2015classical}.
+They used $\textsc{IW}(1)$ only (\ffref{subsec:iterated-width}) in an on-line
+setting (\ffref{subsec:online-setting}). Since \ac{IW} operates only on boolean
+variables, they convert each of the \ac{RAM}'s memory positions to 256
+variables, one for every possible value of the byte.
+
+We downloaded, read and run their kindly provided
+implementation\footnote{\href{https://github.com/miquelramirez/ALE-Atari-Width}{https://github.com/miquelramirez/ALE-Atari-Width}}.
+Their agent behaved erratically until it got to the bottom floor, past the skull
+or without the skull. Then, it made a beeline for the key.
+
+\subsection{Width of \acl{MR}}
+A successful player of \ac{MR} must visit the same location several times. She
+needs to take certain paths and backtrack them, to wait for obstacles to cycle
+between passable and impassable, to take into account doors that may or may not
+be opened and the contents of her inventory.
+
+At least, the path to the solution will involve being at a certain location, for
+more than one step of time. Thus, the search algorithm must not prune a state
+when the time (as given by, for example, \hyperref[ram:frame]{memory position 0x80})
+changes and the position does not.
+
+\newcommand{\ram}[2]{\hyperref[ram:#1]{#2}}
+
+Location of Joe can be represented by the contents of the memory positions
+$\langle\text{\hyperref[ram:x]{0xAA}},
+\text{\hyperref[ram:y]{0xAB}},
+\text{\hyperref[ram:screen]{0x83}}\rangle$,
+that is, $x$, $y$, and screen location. This, combined with position
+\hyperref[ram:frame]{0x80}, intuitively suggests that \ac{MR} has a \emph{width}
+of at least 4.
+
+The authors of \ac{IW} discarded applying a higher width than 1 to Atari games
+because the number of tuples to record is too large. We get around this limitation
+using domain knowledge: we prune only on the 3-tuple representing location. All
+the other memory positions are considered to not change in value. Henceforth, we
+will refer to this algorithm as ``\ac{IW}(3)'' or ``\ac{IW}(3) on position'',
+even the original \ac{IW}(3) would prune far less often.
+
+\ac{IW}(3) on position prunes a movement when Joe does not move to a different
+place. Thus, it allows for exploring the whole screen, while pruning several
+redundant moves such as applying different actions while in the middle of a jump.
+As shown in \ffref{fig:iw-1-3}, this makes for much better exploration of the
+environment.
+
+How is it possible that we can use \ac{IW}(3) on a problem with width $\geq 4$?
+The key lies in the on-line setting. Rather than looking for all the paths until
+the end, the algorithm only explores to a certain point and then picks an
+action. Thus, focusing on spatial exploration works relatively well
+(\ffref{sec:score-montezuma-revenge}).
+\begin{figure}[hbtp]
+\begin{center}
+\includegraphics[width=\textwidth / 2 -2cm]{img/iw1-explore-thick.pdf}
+\includegraphics[width=\textwidth / 2 -2cm]{img/iw3-explore-thick.pdf}
+\end{center}
+\caption[Comparison of exploration in the first screen by $\textsc{IW}(1)$ and
+$\textsc{IW}(3)$ on position.]
+{Comparison of exploration in the first screen by $\textsc{IW}(1)$ and
+$\textsc{IW}(3)$ on position. Observe that $\textsc{IW}(1)$, to the left, prunes
+all paths that move to the right platform, since their $y$ coincides with the
+the middle platform and their $x$ coincides with the path on top.
+Our restricted $\textsc{IW}(3)$ only prunes for repeated positions, so it has no
+problems finding the key.}
+\label{fig:iw-1-3}
+\end{figure}
+
+\subsection{Improving performance with domain knowledge}
+Our \ac{IW}(3) is usable, but it still has several shortcomings. Here we explain
+some of them, that we mitigated. They are more precisely described in
+\ffref{alg:iw-optimised}.
+
+\subsubsection{Caring about life}
+This one is noted and suggested by \citet{lipovetzky2015classical}. Since the
+death of Panama Joe does not reduce the score, the algorithm dies often just to
+instantly move to a desired location. This would be fine if the agent never lost
+a life unintentionally. However, by the nature of its over-pruned planning, this
+is not the case.
+
+\ac{IW}, like \ac{BFS} (\ffref{alg:bfs}), has a single \ac{FIFO} queue as
+frontier. We add another, low-priority, queue, that is only used when
+the first queue is empty. In the low priority queue, we put the nodes where
+Panama Joe has lost a life.
+
+The agent still dies unnecessarily sometimes, when the agent has explored first
+sequences of actions that lead to reward and death. In some of those
+cases, this causes the nonlethal ways to get to the score to be pruned too early.
+
+\subsubsection{Incentivising room exploration}
+More often than not, our agent would follow a path of rewards to the bottom
+floor of the pyramid (room 20 or 23, \ffref{fig:montezuma-map}), and then be
+stuck there, not finding any positive rewards. Thus, we added a small reward
+(+1) to exploring new screens.
+
+This created perverse incentives. The agent often enters room 5 from room 6, or
+room 17 without having any keys, and then immediately leaves, unable to obtain
+more score in there. However, overall, it helps performance.
+
+\subsubsection{Randomly pruning rooms}
+In each tree expansion, upon each first visit to a room (except the first one),
+that room is pruned with a certain probability. When a room is pruned, we prune
+all the nodes that end in that room. On some lucky frames, this makes the agent
+explore farther.
+
+On unlucky frames, the agent may find the return of all the actions being zero.
+We mitigate this by, after expanding the tree, not just taking the first action
+of the branch with highest return, but storing the whole branch. At each frame,
+the newly generated branch is compared with the previous one, and the one with
+the most return is followed.
+
+\subsubsection{Prioritising long paths}
+Ties in branch return are broken by length of the branch. Except for the first
+action, where ties are broken uniformly randomly.
+
+\subsubsection{Overriding pruning near timed obstacles}
+The basic intuition is: when losing a life because of running into an obstacle
+that will disappear after some time, wait.
+
+In practice, this means:
+\begin{itemize}
+  \item Lose a life after walking into the obstacle, not jumping.
+  \item Backtrack to a position ``outside'' the obstacle, that allows you to
+    survive until the same time instant.
+  \item Wait until the obstacle goes away, by testing moves into the direction
+    of the direction you backtracked from, or a maximum time to wait.
+  \item Add the resulting node to the frontier.
+\end{itemize}
+
+\begin{algorithm}[hbtp]
+\begin{algorithmic}
+\Function{Dist}{$\pointt{x_1,y_1}, \pointt{x_2,y_2}$}
+\State \Return $\sqrt{(x_2-x_1)^2 + \left( \frac{(y_2-y_1)}{2}\right)^2}$
+\EndFunction
+\Function{Project}{$\pointt{x_1,y_1},\pointt{x_2,y_2},\pointt{x_2',y_2'}$}
+\State $v_{x_2} = x_2' - x_2$,~~~$v_{y_2} = y_2' - y_2$
+\State $v_{x_1} = -v_{y_2}$,~~~$v_{y_1} = v_{x_2}$
+\State \Return $\left( v_{x_1}(y_2-y_1) - v_{y_1}(x_2-x_1) \right) /
+\left( v_{y_1}v_{x_2} - v_{x_1}v_{y_2} \right)$
+\EndFunction
+\Function{Progress}{$\pointt{x,y} , [p_1=\pointt{x_1, y_1}, p_2= \pointt{x_1,
+y_1}, \dots, p_n]$}
+  \State $\forall i \in [1, n], \; t_i = 0$
+  \State $\forall i \in [1, n), \; (p_{n+i}, t_{n+i}) =
+    \Call{Project}{\pointt{x, y},p_i, p_{i+1}}$
+  \State $m = \argmin_{\,i \in [1, 2n) \text{~s.t.~} t_i \leq 1} \Call{Dist}{\pointt{x, y}, p_i}$
+  \If{$\Call{Dist}{\pointt{x,y}, p_m} > 10$}
+    \State \Return 0
+  \EndIf
+  \State $\forall j \in [1, n], \; \text{len}_j = \sum_{i=1}^{j-1} \Call{Dist}{p_i, p_{i+1}}$
+  \Comment Note that $\text{len}_1 = 0$
+  \If{$m \leq n$}
+    \State \Return $\text{len}_m \,/\, \text{len}_n$
+  \Else
+    \State \Return $(\text{len}_{m-n} + t_m\cdot (l_{m+1} - l_m)) \, / \, \text{len}_n$
+  \EndIf
+\EndFunction
+\Function{Phi}{$v_3,v_4,v_5,v_6$}
+\State \Return $\begin{cases}
+  0 &\quad\text{if }v_6=1 \\
+  \Call{Progress}{\pointt{v_3,v_4}, p[v_5]} &\quad\text{otherwise}
+  \end{cases}$
+\EndFunction
+\State $p[0] = [\pointt{100, 201}, \pointt{133, 201}, \pointt{133, 148},
+\pointt{21, 148}, \pointt{21, 192}, \pointt{9, 207}]$
+\State $p[1] = [\pointt{9, 207}, \pointt{21, 192}, \pointt{21, 148}, \pointt{133,
+148}, \pointt{133, 201}, \pointt{72, 201}, \pointt{72, 251}, \pointt{153, 251}]$
+\end{algorithmic}
+\caption{\ac{IW} for \acl{MR}, optimised with domain knowledge}
+\label{alg:iw-optimised}
+\end{algorithm}
+
+
+% The learning in tabular case took 26h
+% The learning in NN so far taking 13h
+% IW so far taking 13h
 
 %%% Local Variables: 
 %%% mode: latex

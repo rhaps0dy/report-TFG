@@ -416,6 +416,40 @@ y_1}, \dots, p_n]$}
 \end{figure}
 }
 
+\subsection{Options}
+We created options to test with \ac{SMDP} Sarsa. We have 8 options, that
+correspond to the 8 possible minimal actions.
+\begin{itemize}
+  \item \textsc{Noop}: Take action \textsc{Noop} during $frame\_skip$ frames.
+    Primitive actions in Atari games treated as \ac{SMDP} also last
+    $frame\_skip$ frames, so this is just the primitive \textsc{Noop} action.
+  \item \textsc{Up}, \textsc{Down}, \textsc{Left}, \textsc{Right}: the normal
+    directions are followed until:
+    \begin{itemize}
+      \item Their coordinate ($y$ for \textsc{Up} and \textsc{Down}, $x$ for the
+        rest) stops changing for a long enough time. For example, when Joe bumps
+into a wall.
+      \item It wasn't possible to move in the other axis when the action started
+        and it is possible now, or vice versa. This is implemented by generating
+        tentative moves in the other axis every $frame\_skip$ frames, and
+        checking if their $x,y$ coordinates are different.
+      \item Joe will lose a life or start falling in $n_{\text{backtrack}} \cdot
+        frame\_skip$ frames. This is implemented by backtracking generated
+        states when these things happen, in a similar manner to function
+        \textsc{Obstacle-Wait}, from \ffref{alg:iw-funcs}.
+        \begin{itemize}
+          \item If the option starts when Joe is already in mid-air, it behaves
+            like the \textsc{Noop} option.
+        \end{itemize}
+    \end{itemize}
+  \item \textsc{Fire}, \textsc{LeftFire} and \textsc{RightFire}: Take the
+    corresponding action once, then take action \textsc{Noop} until the
+    character lands again.
+\end{itemize}
+
+It is possible to take these actions at all times, their initiation set,
+$\mathcal{I}$, is the set of all states, $\mathcal{S}$.
+
 \section{Planning}
 \acl{IW} was first applied to Atari games by \citet{lipovetzky2015classical}.
 They used $\textsc{IW}(1)$ only (\ffref{subsec:iterated-width}) in an on-line

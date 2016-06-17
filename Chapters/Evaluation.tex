@@ -2,7 +2,11 @@
 \section{Planning\label{sec:score-planning}}
 We evaluated the domain-specific planning algorithm described in
 \ffref{alg:iw-optimised}, with different subsets of enhancements and different
-parameters. Recall that our \ac{IW}(3) only evaluates position for pruning, not
+parameters. We used the \ac{ALE}, with deterministic games
+(\verb-repeat_action_probability=0-). Our code is based in the one available
+from \citet{lipovetzky2015classical}.
+
+Recall that our \ac{IW}(3) only evaluates position for pruning, not
 on any other tuple.
 
 \begin{itemize}
@@ -36,7 +40,8 @@ Subsections~\ref{subsec:domain-explanation} and~\ref{subsec:implementation-iw}.
 actions possible with the Atari or the 8 distinct actions in \ac{MR}.
 \end{itemize}
 
-Additionally, algorithms with an asterisk (*) receive negative rewards on death.
+Additionally, algorithms with an asterisk (*) receive negative rewards (-5000)
+on death. The remaining paremeters values are: $max\_wait=20$, $max\_backtrack=7$.
 
 \begin{table}[hbtp]
   \begin{center}
@@ -139,15 +144,58 @@ on-line setting that demand exploring multitudes of similar paths.
 %
 
 \section{Learning}
-Show the shaping that we did and the learning curve, compare with old shaping
-using options, compare with shaping using options, show reward without shaping.
+We trained agents on the first screen of \acl{MR} using the Sarsa algorithm,
+with and without options, and using our shaping function
+(\ffref{subsec:shaping-function}).
 
-If a deterministic policy is taken, the reward is always 4. A video of that 
+We used a learning rate $\alpha=0.01$ and a discount rate $\gamma=0.995$. We
+also used the \emph{annealing} training technique, which consists in reducing
+the $\varepsilon$ for the $\varepsilon$-greedy strategy every episode. When
+training without annealing we used $\varepsilon=0.1$, and when training with
+annealing we used $\varepsilon=\textsc{Max}(0.7 - 3\cdot 10^{-5} \cdot n_e,
+0.1)$, where $n_e$ is the episode number. This encourages extra exploration at
+the beginning.
+
+The average reward over time can be seen in Figures \ref{fig:q-noopts-noanneal},
+\ref{fig:q-noopts-anneal}, \ref{fig:q-opts-noanneal} and
+\ref{fig:q-opts-anneal}. In each of those figures, at the left the reward
+including the shaping reward is shown, and at the right the environment reward
+alone is shown.
+
+\newcommand{\drawtraining}[2]{
+\begin{figure}[hbtp]
+\begin{center}
+\includegraphics[width=\textwidth/2- 0.2cm]{img/#1-phi.pdf}
+\includegraphics[width=\textwidth/2- 0.2cm]{img/#1.pdf}
+\end{center}
+\label{fig:#1}
+\caption{#2}
+\end{figure}
+}
+
+\drawtraining{q-noopts-noanneal}{The reward over time, without options or
+annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
+\drawtraining{q-noopts-anneal}{The reward over time, without options, with
+annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
+\drawtraining{q-opts-noanneal}{The reward over time, with options but without
+annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
+\drawtraining{q-opts-anneal}{The reward over time, with options and with
+annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
+
+  
+%Show the shaping that we did and the learning curve, compare with old shaping
+%using options, compare with shaping using options, show reward without shaping.
+
+%If a deterministic policy is taken, the reward is always 4. A video of that 
 
 %%%%%%%%%%%%%%%%%
 % Last line of the epochs is possibly a bug, it evaluated rewards.txt
 %%%%%%%%%%%%%%%%%
 
+%both noanneal and montezuma phi options are monzteaumz options!! The most
+%recent is noanneal.
+% first cont_phi is phi_regular_2016_06_17_15_37_03
+% second cont_phi is phi_noanneal_2016_06_17_15_36_51
 \subsection{Shaping\label{subsec:evaluation-shaping}}
 
 Prior to reading about shaping

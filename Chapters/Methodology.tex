@@ -2,7 +2,7 @@
 \newcommand{\refscreen}[1]{\hyperref[fig:montezuma-map]{screen~#1}}
 \chapter{Methodology}
 \section{\acl{MR}}
-\subsection{Description}
+\subsection{Description\label{subsec:mr-description}}
 You, the player, are Panama Joe, an intrepid explorer-archaeologist. Your latest
 trip has brought you to discover the entrance to an Aztec pyramid. Filled with
 excitement, you rush to search the treasures that surely await inside. But the
@@ -33,6 +33,12 @@ only 4 keys. The two doors in \refscreen{17} need to be opened to finish, and
 either one of the doors in \refscreen{1} needs to be opened to do almost
 anything. So the player can either open both doors in \refscreen{1} and not see
 in the bottom floor, or leave one door in each of the screens 1 and 4 unopened.
+
+At each time step, the player can take 8 different actions: \textsc{Noop} (stay
+still), \textsc{Fire} (jump straight up), \textsc{Up}, \textsc{Right},
+\textsc{Left}, \textsc{Down}, \textsc{LeftFire} (jump to the left),
+\textsc{RightFire}. The rest of the 18 actions permitted by the Atari overload
+to one of these.
 
 \begin{figure}[p]
 \setlength{\unitlength}{\textwidth}
@@ -458,7 +464,7 @@ How is it possible that we can use \ac{IW}(3) on a problem with width $\geq 4$?
 The key lies in the on-line setting. Rather than looking for all the paths until
 the end, the algorithm only explores to a certain point and then picks an
 action. Thus, focusing on spatial exploration works relatively well
-(\ffref{sec:score-montezuma-revenge}).
+(\ffref{sec:score-planning}).
 \begin{figure}[hbtp]
 \begin{center}
 \includegraphics[width=\textwidth / 2 -2cm]{img/iw1-explore-thick.pdf}
@@ -468,18 +474,14 @@ action. Thus, focusing on spatial exploration works relatively well
 $\textsc{IW}(3)$ on position.]
 {Comparison of exploration in the first screen by $\textsc{IW}(1)$ and
 $\textsc{IW}(3)$ on position. Observe that $\textsc{IW}(1)$, to the left, prunes
-all paths that move to the right platform, since their $y$ coincides with the
-the middle platform and their $x$ coincides with the path on top.
+all paths that move to the right-middle platform, since their $y$ coincides with the
+the central platform and their $x$ coincides with the right-top platform.
 Our restricted $\textsc{IW}(3)$ only prunes for repeated positions, so it has no
 problems finding the key.}
 \label{fig:iw-1-3}
 \end{figure}
 
-\subsection{Improving performance with domain knowledge}
-Our \ac{IW}(3) is usable, but it still has several shortcomings. Here we explain
-some of them, that we mitigated. They are more precisely described in
-\ffref{alg:iw-optimised}.
-
+\subsection{Improving score with domain knowledge}
 \subsubsection{Caring about life}
 This one is noted and suggested by \citet{lipovetzky2015classical}. Since the
 death of Panama Joe does not reduce the score, the algorithm dies often just to
@@ -536,49 +538,188 @@ In practice, this means:
   \item Add the resulting node to the frontier.
 \end{itemize}
 
+\subsubsection{Preventing short-sighted door opening}
+A fundamental shortcoming of our agent is that it opens doors not to explore
+what is behind them, but because doing so increments the score. As a consequence
+of this (and of shortsightedness), it opens both the doors in each screen 1 and
+5, rendering the game impossible to complete (as explained in
+\ffref{subsec:mr-description}). We penalised this behaviour by giving a penalty
+to opening the wrong doors ($-10\,000$).
+
+\subsection{Implementation}
+Our agent is described in
+Algorithms~\ref{alg:iw-funcs},~\ref{alg:iw-optimised}~and~\ref{alg:online-setting}.
+\textsc{Online-Setting-Episode} in \ffref{alg:online-setting} is the entry
+point.
+
+Each time step, we reuse the search tree created in the last time step.
+Emulating frames is the most computationally expensive step in the search, so we
+restrict each time step to emulating $max_{ef}$ frames
+\citep{lipovetzky2015classical}.
+
+As an efficiency improvement, we can take several actions of the planned
+sequence before re-calculating the search tree. Since our algorithm is neither
+optimal nor complete, this may degrade or enhance performance.
+
+$s[i]$ is used to denote the \ac{RAM} position $i$ in node $s$. When a node $s$ is
+created from the transition function $f$, $s.\textsc{Return}$ contains the
+reward accumulated while emulating the action in $s$.
+
+The transition function $s' = f(s, a)$ is implemented in the \ac{ALE} by first
+loading the state $s$ to the emulator, then applying action $a$ for $frame\_skip$
+frames. In the end we observe the resulting state $s'$, with its reward. The
+$frame\_skip$ constant is very commonly used for playing Atari games, since the
+state changes little every frame (\cite{bellemare2013arcade},
+\cite{lipovetzky2015classical}, \cite{mnih2015human},
+\cite{kulkarni2016hierarchical}, \dots).
+
+\textsc{Noop}, \textsc{Left}, \textsc{Right}, \textsc{Up} and \textsc{Down} are
+actions the character can take, corresponding to standing still and moving
+in a certain direction without jumping, respectively.
+
 \begin{algorithm}[hbtp]
+\newcommand{\n}[1]{0x#1}
+\newcommand{\tn}[1]{\text{0x#1}}
+\renewcommand{\r}[1]{ram[\text{0x#1}]}
 \begin{algorithmic}
-\Function{Dist}{$\pointt{x_1,y_1}, \pointt{x_2,y_2}$}
-\State \Return $\sqrt{(x_2-x_1)^2 + \left( \frac{(y_2-y_1)}{2}\right)^2}$
+\Procedure{Online-Setting-Episode}{}
+\State Initialise action and return 1-based-index sequences,
+$a \gets []$, $R \gets []$
+\State $n_a$: number of actions to take without re-planning
+\State $p_r$: probability that a room is pruned
+\State $f$ is the emulation function
+\State $max_{ef}$ maximum number of frames to emulate per search
+\State $max\_wait$: max. n. of actions to wait for an obstacle to become passable
+\State $max\_backtrack$: max. n. of nodes to backtrack when running into an obstacle
+  \Repeat
+    \State Observe state $s$.
+    \State $s.\textsc{Return} \gets 0$
+    \State $(a', R') \gets \Call{IW3}{\langle s, \mathcal{A}, f \rangle,
+      max_{ef}, max\_wait, max\_backtrack, p_r}$
+    \If{$R=[] \vee R'[1] > R[1]$}
+      \State $R \gets R', a \gets a'$
+    \EndIf
+    \For{$i$ from 1 to $\min(n_a, \Call{Length}{R})$}
+      \State Take action $a[i]$, observe and tally reward
+    \EndFor
+    \State $R \gets R'[n_a+1,n_a+2,\dots]$, $a \gets a'[n_a+1,\dots]$
+   \Until{the game is over}
+\EndProcedure
+\Function{Branch-Return}{$s$}
+\State \textbf{if} $s$ is a leaf node and has opened a wrong door,
+$s.\textsc{Return} \gets -10\,000$ \textbf{end~if}
+\State \textbf{if} $s$ is a leaf node \Return $[s.\textsc{Return}]$ \textbf{end~if}
+\State $r_s = \Call{Branch-Return}{c} \, \forall c \in s.\textsc{Children}$
+\State $r \gets \max_{r\in r_s} r$, comparing by first element, ties broken by
+higher length.
+\State \Return $\Call{Append}{[s.\textsc{Return}], \gamma \cdot r}$
 \EndFunction
-\Function{Project}{$\pointt{x_1,y_1},\pointt{x_2,y_2},\pointt{x_2',y_2'}$}
-\State $v_{x_2} = x_2' - x_2$,~~~$v_{y_2} = y_2' - y_2$
-\State $v_{x_1} = -v_{y_2}$,~~~$v_{y_1} = v_{x_2}$
-\State \Return $\left( v_{x_1}(y_2-y_1) - v_{y_1}(x_2-x_1) \right) /
-\left( v_{y_1}v_{x_2} - v_{x_1}v_{y_2} \right)$
-\EndFunction
-\Function{Progress}{$\pointt{x,y} , [p_1=\pointt{x_1, y_1}, p_2= \pointt{x_1,
-y_1}, \dots, p_n]$}
-  \State $\forall i \in [1, n], \; t_i = 0$
-  \State $\forall i \in [1, n), \; (p_{n+i}, t_{n+i}) =
-    \Call{Project}{\pointt{x, y},p_i, p_{i+1}}$
-  \State $m = \argmin_{\,i \in [1, 2n) \text{~s.t.~} t_i \leq 1} \Call{Dist}{\pointt{x, y}, p_i}$
-  \If{$\Call{Dist}{\pointt{x,y}, p_m} > 10$}
-    \State \Return 0
-  \EndIf
-  \State $\forall j \in [1, n], \; \text{len}_j = \sum_{i=1}^{j-1} \Call{Dist}{p_i, p_{i+1}}$
-  \Comment Note that $\text{len}_1 = 0$
-  \If{$m \leq n$}
-    \State \Return $\text{len}_m \,/\, \text{len}_n$
-  \Else
-    \State \Return $(\text{len}_{m-n} + t_m\cdot (l_{m+1} - l_m)) \, / \, \text{len}_n$
-  \EndIf
-\EndFunction
-\Function{Phi}{$v_3,v_4,v_5,v_6$}
-\State \Return $\begin{cases}
-  0 &\quad\text{if }v_6=1 \\
-  \Call{Progress}{\pointt{v_3,v_4}, p[v_5]} &\quad\text{otherwise}
-  \end{cases}$
-\EndFunction
-\State $p[0] = [\pointt{100, 201}, \pointt{133, 201}, \pointt{133, 148},
-\pointt{21, 148}, \pointt{21, 192}, \pointt{9, 207}]$
-\State $p[1] = [\pointt{9, 207}, \pointt{21, 192}, \pointt{21, 148}, \pointt{133,
-148}, \pointt{133, 201}, \pointt{72, 201}, \pointt{72, 251}, \pointt{153, 251}]$
 \end{algorithmic}
-\caption{\ac{IW} for \acl{MR}, optimised with domain knowledge}
-\label{alg:iw-optimised}
+\caption{The agent in an on-line setting, using \ac{IW}(3) for \acl{MR}, along
+with some supporting functions for \ac{IW}(3).}
+\label{alg:online-setting}
 \end{algorithm}
 
+\begin{algorithm}[hbtp]
+\newcommand{\n}[1]{0x#1}
+\newcommand{\tn}[1]{\text{0x#1}}
+\renewcommand{\r}[1]{ram[\text{0x#1}]}
+\begin{algorithmic}
+\Function{Update-Novelty}{$seen\_tuples, visited\_screens, pruned\_screens, ram,
+  p_r$}
+\If{$\neg visited\_screens[\r{83}]$}
+\State $visited\_screens[\r{83}] \gets true$
+\State With probability $p_r$: $pruned\_screens[\r{83}] \gets true$
+\EndIf
+\State $seen\_tuples[ \langle \r{AA},\r{AB},\r{83} \rangle ] \gets true$
+\EndFunction
+\Function{Check-Novelty}{$seen\_tuples, pruned\_screens, ram$}
+\State \Return $\neg (pruned\_screens[\r{83}] \, \vee $
+\State \hspace{3cm} $seen\_tuples[ \langle \r{AA},\r{AB},\r{83} \rangle ])$
+\EndFunction
+\Function{On-Ground?}{$ram$}
+\State \Return $\r{D6}=\tn{FF} \wedge \r{D8} =0$
+\EndFunction
+\Function{Falling?}{$ram$}
+\State \Return $\r{D8} \neq 0$
+\EndFunction
+\Function{LRUD?}{$a$}
+\State \Return Whether the action $a \in \{ \textsc{Left},\textsc{Right}, \textsc{Up},
+\textsc{Down} \}$. 
+\EndFunction
+\Function{Obstacle-Wait}{$f, obstacle\_child, q, max\_wait, max\_backtrack$}
+  \State $p \gets obstacle\_child.\textsc{Parent}$, $p_p \gets obstacle\_child$,
+    $l_0 \gets p[\tn{BA}]$
+  \For{$i \in [0,max\_backtrack)$}
+    \State $f^i(s, a) = f(f(\dots f(s, a) \dots, a), a)$, totalling $i+1$ applications of $f$
+    \State $n \gets f^i(p, \textsc{Noop})$
+    \If{$\Call{On-Ground?}{n} \wedge n[\tn{BA}] = l_0$}
+      \For{$i \in [0,max\_wait)$}
+        \State $n_{\text{test}} \gets f^2(n, p_p.\textsc{Action})$
+        \If{$\Call{On-Ground?}{n_{\text{test}}} \wedge n_{\text{test}}[\tn{BA}] = l_0$}
+        \State \Return $\Call{Queue-Insert}{q, n}$
+        \EndIf
+        \State $n \gets f(n, \textsc{Noop})$
+      \EndFor
+    \EndIf
+    \State $p_p \gets p$, $p \gets p.\textsc{Parent}$
+  \EndFor
+  \State \Return $q$
+\EndFunction
+\end{algorithmic}
+\caption{Supporting functions for \ac{IW}(3) (\ffref{alg:iw-optimised})}
+\label{alg:iw-funcs}
+\end{algorithm}
+
+\begin{algorithm}[hbtp]
+\newcommand{\n}[1]{0x#1}
+\newcommand{\tn}[1]{\text{0x#1}}
+\renewcommand{\r}[1]{ram[\text{0x#1}]}
+\begin{algorithmic}
+\Function{IW3}{$problem=\langle s_0, \mathcal{A}, f \rangle, max_{ef},
+  max\_wait, max\_backtrack, p_r$}
+  \State $seen\_tuples \gets false$ for all tuples $[0,256)^2 \times [0,24)$
+  \State $visited\_screens[i] \gets false,\,pruned\_screens[i] \gets false,\,
+  \forall i\in[0,24)$
+  \State $visited\_screens[s_0.\r{83}] \gets true$
+  \State $q \gets [s_0]$, $q_l \gets []$, \ac{FIFO} queues representing the frontier
+  \While{$\neg \Call{Empty?}{q} \wedge \neg \Call{Empty?}{q_l} \wedge
+          \text{num.~emulated~frames} < max_{ef}$}
+    \State Get $s \gets \Call{Pop}{q}$, or $\Call{Pop}{q_l}$ if $q$ is empty.
+    \State $obstacle\_child \gets \varnothing$
+    \For{\textbf{each} child $c = f(s, a) \, \forall a \in \mathcal{A}$}
+    \If{$\Call{Check-Novelty}{seen\_tuples, pruned\_screens, c}$}
+    \State $\Call{Update-Novelty}{seen\_tuples, visited\_screens,
+      pruned\_screens, c, p_r}$
+    \If{$c[\tn{BA}] < s[\tn{BA}]$, this node loses a life} 
+      \If{$\Call{On-Ground?}{c} \wedge \Call{On-Ground?}{s}
+        \wedge \Call{LRUD?}{a}$}
+        \State $obstacle\_child \gets c$
+      \EndIf
+      \State $q_l \gets \Call{Queue-Insert}{q_l, c}$
+    \Else
+    \If{$\Call{Falling?}{c} \wedge \Call{On-Ground?}{s}
+        \wedge \Call{LRUD?}{a}$}
+        \State $obstacle\_child \gets c$
+        \State \textbf{if} $a=\textsc{Down}$ \textbf{then} $q \gets
+        \Call{Queue-Insert}{q, c}$ \textbf{end~if}
+      \Else
+        \State $q \gets \Call{Queue-Insert}{q, c}$
+      \EndIf
+    \EndIf
+    \EndIf
+    \EndFor
+    \If{$obstacle\_child \neq \varnothing$}
+    \State $q, \gets \Call{Obstacle-Wait}{f, obstacle\_child, q,
+max\_wait, max\_backtrack$}
+    \EndIf
+  \EndWhile
+  \State \Return $\Call{Branch-Return}{s_0}$
+\EndFunction
+\end{algorithmic}
+\caption{\ac{IW}(3) for \acl{MR}, optimised with domain knowledge}
+\label{alg:iw-optimised}
+\end{algorithm}
 
 % The learning in tabular case took 26h
 % The learning in NN so far taking 13h

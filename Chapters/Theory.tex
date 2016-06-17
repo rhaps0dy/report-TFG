@@ -500,7 +500,7 @@ more frequent feedback. However, rewards added by shaping may change the
 behaviour of the agent from what would be the optimal behaviour with the original
 \ac{MDP}. Indeed, this happened while
 conducting naive learning experiments with shaping for this work
-(\ffref{subsec:methodology-shaping}).
+(\ffref{subsec:evaluation-shaping}).
 
 The following definitions and observations are taken from, and proved in,
 \citet{ng1999policy}.
@@ -803,11 +803,13 @@ what is provided in the problem definition. This is in contrast to
 \newconcept{informed} or \newconcept{heuristic} search algorithms, that have
 some domain knowledge about which expanded nodes are more promising.
 
-\fxwarning{Expand or erase, depending on what is necessary}
 Note that \ac{BFS} always finds a solution (it is \newconcept{complete}), if
 there is one and it is not terminated prematurely. It is only an optimal
 solution if the path cost is a non-decreasing function of path length, which is
-true when all actions have the same cost. Its space and time complexity are $O(b^d)$
+true when all actions have the same cost. Thus, \ac{BFS} is optimal in these
+conditions. The space and time complexity of \ac{BFS} are $O(b^d)$, where $b$ is
+the \newconcept{branching factor}, or number of possible actions at each node,
+and $d$ is the \newconcept{depth} that is explored.
 
 \citep[Sections~3.3,~3.4]{russell2009aima}
 

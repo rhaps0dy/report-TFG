@@ -168,8 +168,7 @@ alone is shown.
 \includegraphics[width=\textwidth/2- 0.2cm]{img/#1-phi.pdf}
 \includegraphics[width=\textwidth/2- 0.2cm]{img/#1.pdf}
 \end{center}
-\label{fig:#1}
-\caption{#2}
+\caption{#2\label{fig:#1}}
 \end{figure}
 }
 
@@ -182,6 +181,26 @@ annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
 \drawtraining{q-opts-anneal}{The reward over time, with options and with
 annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
 
+There is something odd about all the graphs. First, both graphs that do not use
+options (Figures \ref{fig:q-noopts-noanneal} and \ref{fig:q-noopts-anneal}),
+actually \emph{decrease} in accumulated reward during the first $\sim 25\,000$
+episodes. However, the accumulated reward without accounting for the shaping
+function is almost monotonically increasing. We suspect that the return in the
+starting state is also monotonically increasing, and it is the unique form of
+the shaping function $F(s, a, s') = \gamma\phi(s') - \phi(s)$ that permits this
+to happen.
+
+It is also somewhat worthy of note that the annealed version takes longer start
+increasing in reward, but once it does it converges earlier. We attribute this
+to an early exploration of ``accidental'' states that makes the agent learn them
+thoroughly at first, and then make it have no problems when spuriously
+encountering them afterwards.
+
+As for the versions with options, they do not work at all. Videos of
+the agent acting show that it learns to jump to the left, dying as fast as
+possible. The reward it gains in doing so is negative, and less than it gains if
+it jumps to the right and follows with the plan as the agents without options,
+but the options do not seem to fit.
   
 %Show the shaping that we did and the learning curve, compare with old shaping
 %using options, compare with shaping using options, show reward without shaping.
@@ -196,9 +215,24 @@ annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
 %recent is noanneal.
 % first cont_phi is phi_regular_2016_06_17_15_37_03
 % second cont_phi is phi_noanneal_2016_06_17_15_36_51
-\subsection{Shaping\label{subsec:evaluation-shaping}}
+\subsection{The pitfalls of shaping\label{subsec:evaluation-shaping}}
+Prior to reading about shaping functions that do not vary the optimal policy, we
+tried to lay down a path of ``pellets'' that the agent would get reward for
+collecting, from the start to the key. We arranged them in a line, and made it
+so that collecting one pellet also collected all the previous ones. We tried to
+mitigate this by reducing the number of pellets the agent could get at once, but
+then it found another unexpected way to quickly grab them
+(\ffref{fig:shaping-pitfalls}).
 
-Prior to reading about shaping
+\begin{figure}[hbtp]
+\begin{center}
+\includegraphics[width=\textwidth / 3 * 2]{img/shaping-defeated.pdf}
+\end{center}
+\caption{The original shaping rewards, and the two ways the agent found of
+  defeating their purpose. First, it took the magenta path. After restricting
+  the amount of rewards to be collected at the same time, it took the red
+path.\label{fig:shaping-pitfalls}}
+\end{figure}
 
 %%% Local Variables: 
 %%% mode: latex

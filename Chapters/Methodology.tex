@@ -125,6 +125,12 @@ circumstances, and are probably editable in the middle of the computations
 within a frame. However, their value has been observed only going back to what
 it was if modified between frames.
 
+We have a very strong suspicion that nowhere in the \ac{RAM} is stored the
+layout of the screen, or where collisions can occur. This is coded into the
+programming path (with branches depending on the character's position), or
+stored somewhere in the ROM. A learner that hopes to generalise between screens
+needs to have access to that information.
+
 \begin{table}[hbtp]
 \begin{center}
 \newcommand{\ram}[2]{\hyperref[ram:#1]{#2*}}

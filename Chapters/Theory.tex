@@ -486,8 +486,10 @@ all states and values. Instead, we use a learned function that approximates $Q$.
 Desirable approximate functions not only store values close to those of the states and
 actions the agent has seen, but also \emph{generalise} to unseen states and
 actions. A very desirable method for learning such approximate functions is the
-use of \acfp{NN}, and \acfp{DQN} \citep{mnih2015human} are a version
-of Sarsa that use \acp{NN} for approximating the action-value function.
+use of \acfp{NN}. \acfp{DQN} \citep{mnih2015human} are a version of Q-Learning
+(similar to Sarsa, but using $\max_a Q(s_{t+1},a)$ instead of $Q(s_{t+1},
+a_{t+1})$ for updates) that use \acp{NN} for approximating the action-value
+function.
 
 When using function approximation in Sarsa, the only step changed is the $Q$
 update step. Instead of updating a table with the learning rate, it updates the

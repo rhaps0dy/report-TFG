@@ -409,9 +409,10 @@ and ``optimal'' policies based on a sub-optimal value function, always take one
 action for any state. Instead of taking only that action, $\varepsilon$-greedy
 policies:
 \begin{itemize}
-\item Take $\pi^*(s)$ with probability $1-\varepsilon$
+\item Take the current deterministic policy's action $\pi(s)$ with probability
+$1-\varepsilon$.
 \item Take an uniformly randomly sampled $a\in\mathcal{A}_s$ with probability
-$\varepsilon$
+$\varepsilon$.
 \end{itemize}
 Where $\varepsilon$ is a parameter, $0\leq\varepsilon\leq 1$. Often,
 $\varepsilon=0.1$.
@@ -420,22 +421,20 @@ $\varepsilon=0.1$.
 
 \subsection{Sarsa\label{subsec:sarsa}}
 
-Suppose an agent knows the optimal value function, $V(s)$, and is in state $s$.
-How would it go about choosing its next action? Maybe it uses a
-$\varepsilon$-greedy optimal policy as seen in the previous section, but
-calculating the $\varepsilon$-greedy optimal policy requires calculating the
-optimal policy.
+Suppose an agent knows the optimal value function, $V^*(s)$, and is in state $s$.
+How would it go about choosing its next action? Maybe it uses an
+$\varepsilon$-greedy optimal policy, as seen in the previous section:
 
 \begin{equation}
-  \pi^*(s) = \argmax_{a\in\mathcal{A}_s} \sum_{s'\in\mathcal{S}}\mathcal{P}^a_{ss'}V(s)
+  \pi^*(s) = \argmax_{a\in\mathcal{A}_s} \sum_{s'\in\mathcal{S}}\mathcal{P}^a_{ss'}V^*(s)
   \tag{\ref{eq:optimal-policy-value} revisited}
 \end{equation}
 
-Note that we need a model of the environment, $\mathcal{P}^a_{ss'}$, as well as the
-value function $V(s)$. However, if we know the action-value function, we do not
-need a model of the environment.
+Note that we need a model of the environment, $\mathcal{P}^a_{ss'}$, as well as
+the optimal value function $V^*(s)$. However, if we know the action-value
+function, we do not need a model of the environment.
 \begin{equation}
-  \pi^*(s) = \argmax_{a\in\mathcal{A}_s} Q(s, a)
+  \pi^*(s) = \argmax_{a\in\mathcal{A}_s} Q^*(s, a)
   \label{eq:q-policy}
 \end{equation}
 
@@ -462,11 +461,12 @@ s\in\mathcal{S}$
 \end{algorithmic}
 \end{algorithm}
 
+In \ffref{alg:sarsa} we describe Sarsa, which estimates the
+optimal $Q^*$ function under an $\varepsilon$-greedy policy to maximise reward.
+
 $\pi^\varepsilon_Q$ is an $\varepsilon$-greedy policy based on
-the optimal policy based on $Q$, as per \ffref{eq:q-policy}. It is
-possible to use other policies based on the optimal policy based on $Q$. However,
-the policy used must have a non-zero probability of choosing all the actions for
-convergence to the optimal policy to be guaranteed.
+the deterministic greedy policy based on the current estimate of $Q$, as per
+\ffref{eq:q-policy}.
 
 $\alpha$ is the \newconcept{learning rate}, $0\leq\alpha\leq 1$. Because we
 don't have the model or policy, only \emph{samples} from them, we cannot
@@ -515,16 +515,15 @@ agent interacts in. We change that \ac{MDP} for another one, $\mathcal{M}' = \la
 $F : \mathcal{S} \times A \times \mathcal{S} \mapsto \mathbb{R}$ is a bounded
 real-valued function called the \newconcept{shaping function}.
 
-Let $\phi(s)$, $\phi : \mathcal{S} \mapsto \mathbb{R}$ be a potential function.
 A shaping function $F(s, a, s')$ does not alter the optimal policy if and only
-if it is a \newconcept{potential-based function}. That is, there exists a
-potential function $\phi$ such that:
+if it is a \newconcept{potential-based shaping function}. That is, there exists a
+function $\phi(s)$, $\phi : \mathcal{S} \mapsto \mathbb{R}$ such that:
 \begin{equation}
   F(s, a, s') = \gamma \phi(s') - \phi(s)
   \label{eq:shaping-reward}
 \end{equation}
 
-Potential-based reward functions are robust: near-optimal policies
+Potential-based shaping functions are robust: near-optimal policies
 in $\mathcal{M}$ remain near-optimal policies in $\mathcal{M'}$: if $\left|
 V^\pi_M - V^*_M \right| < \varepsilon$, then $\left| V^\pi_{M'} - V^*_{M'}
 \right| < \varepsilon$.
@@ -559,7 +558,6 @@ are taken.
 An option is a triple $\langle \mathcal{I}, \pi, \beta \rangle$:
 \begin{itemize}
   \item $\mathcal{I} \subseteq \mathcal{S}$, the set of states the action can be
-    \newconcept{initiated} the set of states the action can be
     \newconcept{initiated} in.
   \item $\pi(s, a)$, $\pi : \mathcal{S} \times \mathcal{A} \mapsto \mathbb{R}$,
 the option's policy.
@@ -671,9 +669,9 @@ when the option corresponds to a primitive action.
 %DIJOUS
 \section{Search in deterministic \acp{MDP}}
 
-It can be desirable for the agent to act ``well'' on the first try, without
+It can be desirable for the agent to act optimally on the first try, without
 having to interact with the environment and learn by trial and error. If the
-agent has a model of the environment, this becomes possible.
+agent has a perfect model of the environment, this becomes possible.
 
 This is effectively what \acl{VI} does (\ffref{subsec:VI}). However, if the
 \ac{MDP} has a deterministic transition model, a much more efficient class of
@@ -793,8 +791,8 @@ in general. We show it in \ffref{alg:bfs}.
 
 The algorithm uses the following strategy: first it expands the root node, then
 each of its successors, then each of the successors' successors, \dots At each
-iteration, it expands the shallowest node that in the frontier, with ties broken
-by order of expanding them. To \newconcept{expand} a node is to check if any of
+iteration, it expands the shallowest node in the frontier, with ties broken
+by order of expansion. To \newconcept{expand} a node is to check if any of
 its children is a goal and add them to the frontier. The \newconcept{frontier}
 is a data structure, in this case a \ac{FIFO} queue, that keeps the nodes we
 will expand in the future.
@@ -918,8 +916,9 @@ The novelty measure of a node is the size of the smallest \newconcept{$i$-tuple}
 in it that has not been ``seen'' before in the search. An $i$-tuple is a tuple of
 $i$ variables. That a tuple has been ``seen'' before means that, in a previously
 searched state (that is, one that is in the $explored$ set), all of the boolean
-variables in that tuple have the same value as they do in the current state. See
-also the novelty measure example in \ffref{tab:novelty-example}.
+variables in that tuple have the same value as they do in the current state. For
+clarity, we show an example of a state's novelty measure in
+\ffref{tab:novelty-example}.
 
 Checking that the novelty measure is not greater than the current maximum width
 is carried out in the $\textsc{Check-Novelty}$ function in
@@ -943,19 +942,20 @@ State & $f_1$ & $f_2$ & $f_3$ & Novel tuples &  Novelty \\
 
 \end{center}
 \caption[Novelty measure example]{Example that shows the novelty measure for
-each new state, assuming they are expanded from top to
-bottom. $f_i$ are the problem's variables, $f_i\in F$.}
+each new state, assuming they are expanded in order, from top to bottom. $f_i$
+are the problem's variables, $f_i\in F$. In the ``Novel tuples'' column, the
+tuples of variables that have values never seen before are shown, and the
+corresponding novelty measure of the state is shown in the ``Novelty'' column. }
 \label{tab:novelty-example}
 \end{table}
 
-\citet{lipovetzky2012width} define the \newconcept{width} $w$ of a planning problem
-to be the minimum $i$ such that $\textsc{IW}(i)$ finds an optimal solution for
-that problem.\footnote{The paper, as often papers do, is actually written in the
-reverse direction. First, the authors formally define width, and then using that notion
-they craft the \ac{IW} algorithm.} Then they find, experimentally, that $w$ is
-small $w \leq 2$ for many planning problems in which the goal is restricted to a
-single variable, that is, $|G|=1$. Therefore, \ac{IW} is quite efficient
-for problems with low width, since $\textsc{IW}(i)$ has complexity $O(|F|^i)$.
+\citet{lipovetzky2012width} define the \newconcept{width} $w$ of a planning
+problem to be the minimum $i$ such that $\textsc{IW}(i)$ finds an optimal
+solution for that problem. \ac{IW} is quite efficient for problems with low
+width, since $\textsc{IW}(i)$ has complexity $O(|F|^i)$. Then they find,
+experimentally, that $w$ is small ($w \leq 2$) for many planning problems. Thus,
+\ac{IW} is often a very efficient planning algorithm without a domain-specific
+heuristic.
 
 \begin{algorithm}[hbtp]
 \newcommand{\nchoosek}[2]{\left(\begin{array}{c}#1 \\ #2 \end{array}\right)}
@@ -967,6 +967,7 @@ for problems with low width, since $\textsc{IW}(i)$ has complexity $O(|F|^i)$.
     \State \Return $seen\_tuples$
   \EndFunction
   \Function{Check-Novelty}{$seen\_tuples, width, state$}
+  \State \Comment Check if the novelty measure is not greater than $width$.
     \ForAll{tuples of variables, $t$, of size $width$}
       \If{$seen\_tuples[t, \Call{Value-Of}{t}] = false$}
        \Return $true$
@@ -981,9 +982,12 @@ for problems with low width, since $\textsc{IW}(i)$ has complexity $O(|F|^i)$.
     \State $\Call{Update-Novelty}{seen\_tuples, i, I}$
     \State Perform \ac{BFS} (\ffref{alg:bfs}), with the following modification.
     \begin{itemize}
-      \item[] When inserting a node to the frontier: only do so if
-        $\Call{Check-Novelty}{seen\_tuples, i, node.\textsc{State}} = true$. Then,
-        update $seen\_tuples \gets \Call{Update-Novelty}{seen\_tuples, i,
+	  \item[] When inserting a node into the frontier: only do so if the
+		  state's novelty is not greater than $i$. That is, when
+
+        $\Call{Check-Novelty}{seen\_tuples, i, node.\textsc{State}} = true$.
+
+        Then, update $seen\_tuples \gets \Call{Update-Novelty}{seen\_tuples, i,
         node.\textsc{State}}$.
     \end{itemize}
     \State \Return the return value of the performed \ac{BFS}.

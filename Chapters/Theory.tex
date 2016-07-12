@@ -91,8 +91,9 @@ set of possible actions, $\mathcal{A}$, are finite. Otherwise, it is
 Sometimes it makes sense to divide a task in non-overlapping continued
 interactions between the agent and environment. Such tasks are called
 \newconcept{episodic}, and they have one final time step. In contrast,
-\newconcept{continuing} tasks never stop, in theory.
-\citep[Section~3.3]{sutton1998introduction}
+\newconcept{continuing} tasks never stop, in theory
+\citep[Section~3.3]{sutton1998introduction}. The problem we work on, \acl{MR},
+is an episodic \ac{SDP}.
 
 \subsubsection{Deterministic and stochastic \acp{SDP}}
 We have not yet mentioned how the next state of an \ac{SDP} is determined. In
@@ -103,7 +104,8 @@ states and rewards.
 Sometimes, the probability distribution has all its weight on a single
 state, that is, the next state is a function of the previous history of the
 process. Such \acp{SDP} are called \newconcept{deterministic}. When an \ac{SDP} is not
-deterministic, it is \newconcept{stochastic}.
+deterministic, it is \newconcept{stochastic}. We work with a deterministic
+\ac{SDP}, which is why we are able to use search methods (\ffref{sec:search}).
 
 \subsection{Returns}
 What is to play ``well''? The agent's goal is, informally, to maximise the rewards it
@@ -667,7 +669,7 @@ Note that all these expressions reduce to their ordinary \ac{MDP} counterparts
 when the option corresponds to a primitive action.
 
 %DIJOUS
-\section{Search in deterministic \acp{MDP}}
+\section{Search in deterministic \acp{MDP}\label{sec:search}}
 
 It can be desirable for the agent to act optimally on the first try, without
 having to interact with the environment and learn by trial and error. If the

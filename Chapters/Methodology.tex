@@ -554,14 +554,14 @@ more score in there. However, overall, it helps performance.
 \subsubsection{Randomly pruning rooms}
 In each tree expansion, upon each first visit to a room (except the first one),
 that room is pruned with a certain probability. When a room is pruned, we prune
-all the nodes that end in that room. On some lucky frames, this makes the agent
+all the nodes that end in that room. On some expansions this makes the agent
 explore farther.
 
-On unlucky frames, the agent may find the return of all the actions being zero.
-We mitigate this by, after expanding the tree, not just taking the first action
-of the branch with highest return, but storing the whole branch. At each frame,
-the newly generated branch is compared with the previous one, and the one with
-the most return is followed.
+On unlucky tree generations, the agent may find the return of all the actions
+being zero. We mitigate this by, after expanding the tree, not just taking the
+first action of the branch with highest return, but storing the whole branch.
+After each generation, the new branch is compared with the previous one, and the
+one with the most return is followed and stored for the next expansion.
 
 \subsubsection{Prioritising long paths}
 Ties in branch return are broken by length of the branch. Except for the first

@@ -258,7 +258,7 @@ the environment, we can calculate the optimal policy:
 
 Where ties are broken arbitrarily. Notice that we wrote it as a mapping from
 states to actions, and not as a mapping from states and actions to probability
-weights. This is because optimal policies take only one action.
+weights. This is because optimal policies are deterministic.
 
 \citep[Subsection~17.1.2]{russell2009aima}
 
@@ -534,7 +534,7 @@ V^\pi_M - V^*_M \right| < \varepsilon$, then $\left| V^\pi_{M'} - V^*_{M'}
 
 Suppose Alice wants to eat a salad. She needs the ingredients, so, she needs to
 go to the grocery store. To accomplish that, she needs to get out of the house,
-go out the door, \dots To accomplish the first, she needs to get up from the
+follow the street, \dots To accomplish the first, she needs to get up from the
 chair, get out the room, and navigate to the front door. To get up from the
 chair, she needs to tense her leg muscles in this way, move her arms in that
 way, \dots
@@ -726,7 +726,7 @@ algorithm for finding optimal solutions to search problems.
 
 Note that, since the transition is deterministic, we can write without loss of
 information $c(s, a) = c(s, a, f(s, a))$. Also, often the step cost is just
-$c(s,a)=1 \forall s, a$, so the path cost is the path length. 
+$c(s,a)=1 \; \forall s, a$, so the path cost is the path length. 
 
 \subsubsection{Analogy with \acp{MDP}}
 We can draw direct analogies between each element of a search problem and each

@@ -108,38 +108,52 @@ Subsection\fancyrefdefaultspacing#1 on page~#2%
 
 \begin{document}
 \pagenumbering{roman}
+\pagestyle{empty}
 \includepdf[pages={1}]{Content/cover.pdf}
+\cleardoublepage
 \input{Content/Title.tex}
+
 \onehalfspacing
+
+\cleardoublepage
 \input{Content/Acknowledgements.tex}
+
+\cleardoublepage
 \input{Content/Abstract.tex}
 
-\pagestyle{fancy}
-\listoffixmes
-\newpage
+\cleardoublepage
 %\lhead{Contents}
+\pagestyle{fancy}
 \tableofcontents
-\newpage
+\pagestyle{empty}
+
+%\cleardoublepage
 %\lhead{List of Figures}
 %\listoffigures
-%\newpage
+
+%\cleardoublepage
 %%\lhead{List of Tables}
 %\listoftables
-%\newpage
-%\lhead{Abbreviations}
-\thispagestyle{empty}
+
+\cleardoublepage
+\pagestyle{empty}
 \printacronyms[include-classes=abbrev,name=Abbreviations,heading=chapter*]
 \addcontentsline{toc}{chapter}{Abbreviations}
 
+\cleardoublepage
+\pagestyle{fancy}
 \pagenumbering{arabic}
-
 \input{Chapters/Introduction.tex}
+\cleardoublepage
 \input{Chapters/Theory.tex}
+\cleardoublepage
 \input{Chapters/Methodology.tex}
+\cleardoublepage
 \input{Chapters/Evaluation.tex}
+\cleardoublepage
 \input{Chapters/Conclusions.tex}
 
-\newpage
+\cleardoublepage
 \thispagestyle{empty}
 \printbibliography
 \addcontentsline{toc}{chapter}{Bibliography}

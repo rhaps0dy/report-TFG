@@ -10,6 +10,7 @@
 \usepackage[tmargin=3cm, lmargin=3cm, rmargin=3cm, bmargin=3cm, marginparsep=0.3cm, marginparwidth=2.4cm]{geometry}
 \usepackage{hyperref}
 \usepackage{import}
+\usepackage{emptypage}
 \PassOptionsToPackage{usenames,dvipsnames}{color} % color is loaded by hyperref
 \hypersetup{unicode=true,
             colorlinks=true,
@@ -99,12 +100,14 @@ Subsection\fancyrefdefaultspacing#1 on page~#2%
 %\newcommand{\newconceptspec}[2]{\emph{#1}\marginpar{\footnotesize\textsc{#2}}}
 \newcommand{\newconceptspec}[2]{\emph{#1}}
 \newcommand{\newconcept}[1]{\newconceptspec{#1}{\capitalisewords{#1}}}
-\newcommand{\centeredtitle}[1]{\begin{center} {\Huge \textbf{#1}}
-    \addcontentsline{toc}{chapter}{#1} \end{center}\bigskip}
+\newcommand{\centeredtitle}[1]{ \phantomsection
+  \addcontentsline{toc}{chapter}{#1} \begin{center} {\Huge
+  \textbf{#1}} \end{center}\bigskip}
 \newcommand{\argmin}{\operatornamewithlimits{arg\,min}}
 \newcommand{\argmax}{\operatornamewithlimits{arg\,max}}
 
 \subimport{Content/}{Acronyms.tex}
+
 
 \begin{document}
 \pagenumbering{roman}
@@ -125,7 +128,6 @@ Subsection\fancyrefdefaultspacing#1 on page~#2%
 %\lhead{Contents}
 \pagestyle{fancy}
 \tableofcontents
-\pagestyle{empty}
 
 %\cleardoublepage
 %\lhead{List of Figures}
@@ -136,8 +138,8 @@ Subsection\fancyrefdefaultspacing#1 on page~#2%
 %\listoftables
 
 \cleardoublepage
-\pagestyle{empty}
 \printacronyms[include-classes=abbrev,name=Abbreviations,heading=chapter*]
+\phantomsection
 \addcontentsline{toc}{chapter}{Abbreviations}
 
 \cleardoublepage

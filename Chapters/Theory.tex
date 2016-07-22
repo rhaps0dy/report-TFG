@@ -356,7 +356,7 @@ update rule for the table. \ac{VI} is described in \ffref{alg:value-iteration}.
 
 \begin{algorithm}[hbtp]
 \begin{algorithmic}
-\State Initialize $V(s)$ arbitrarily, for example $V(s)=0 \; \forall s\in\mathcal{S}$
+\State Initialise $V(s)$ arbitrarily, for example $V(s)=0 \; \forall s\in\mathcal{S}$
 \Repeat
   \State $\Delta \gets 0$, is the maximum update magnitude this iteration
   \For{each $s\in\mathcal{S}$}
@@ -397,12 +397,12 @@ ideas in the Sarsa algorithm in \ffref{subsec:sarsa}, Q-learning,
 
 \subsection{Exploration-exploitation and \texorpdfstring{$\varepsilon$}{ε}-greedy policies}
 Agents that are interacting with an environment and learning while collecting
-rewards face the \newconcept{exploration-exploitation tradeoff}. Should they take the
+rewards face the \newconcept{exploration-exploitation trade-off}. Should they take the
 current maximum return action, or take an action with less return, that may turn
 out to have a higher return when the internal value function is closer to the
 optimal function?
 
-One way to deal with this tradeoff is to follow an
+One way to deal with this trade-off is to follow an
 \newconceptspec{$\varepsilon$-greedy policy}{$\varepsilon$-greedy Policy}.
 Recall from \ffref{subsec:optimal-policy} that optimal policies,
 and ``optimal'' policies based on a sub-optimal value function, always take one
@@ -446,7 +446,7 @@ For this reason, methods that learn action-value functions are called
 \caption{Sarsa \citep[Section~6.4]{sutton1998introduction}}
 \label{alg:sarsa}
 \begin{algorithmic}
-\State Initialize $Q(s, a)$ arbitrarily, for example $Q(s, a)=0 \; \forall
+\State Initialise $Q(s, a)$ arbitrarily, for example $Q(s, a)=0 \; \forall
 s\in\mathcal{S}$
 \RepeatComment{for each episode}
   \State Set $s$ to the current, initial, state
@@ -977,7 +977,7 @@ for problems with low width, since $\textsc{IW}(i)$ has complexity $O(|F|^i)$.
   \Function{IW}{$problem=\langle F, I, \mathcal{A}, G, f \rangle, i$}
     \State $seen\_tuples \gets$ map table from all the possible
       $width$-tuple--value pairs to a boolean. Takes up $\nchoosek{|F|}{width}\cdot
-      2^i$ bits. Initialize to all $false$.
+      2^i$ bits. Initialise to all $false$.
     \State $\Call{Update-Novelty}{seen\_tuples, i, I}$
     \State Perform \ac{BFS} (\ffref{alg:bfs}), with the following modification.
     \begin{itemize}

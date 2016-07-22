@@ -22,13 +22,13 @@ To do planning, the agent needs a model of the world. Often that model, unlike
 in this case, is not readily available. One possible avenue of research would be
 to try and predict the next world state from the current state and a given action.
 
-One way to do that would be using an \emph{autoencoder} (such as
-\cite{dumoulin2016adversarially}) to learn an abstracted representation of the
-state, and then try to predict the abstracted representation of the next state.
+One way to do that would be to use something similar to an \emph{autoencoder} to
+learn an abstracted representation of the state, and then try to predict the
+abstracted representation of the next state, as did \citet{oh2015action}.
 Ideally, that would be generalised over several platforming games, or a
 synthetic procedural environment that follows the laws of 2D physics.
 
-The learner could also be targeted to learn a high-level graph-like
+The learner could also be supervised to learn a high-level graph-like
 representation of the screen, showing ladders and platforms as edges and the
 places where they join as nodes, for example.
 
@@ -38,8 +38,8 @@ Gaussian mixture models of background \citep{stauffer1999adaptive}.
 
 Planning algorithms that prune on novelty of the state, based on \acl{IW}, maybe
 with the novelty measure in \citet{bellemare2016unifying}, could be ran on
-tuples in the autoencoder's latent variable space, which has lower
-dimensionality than the input.
+approximate tuples in the autoencoder's state representation space, which has
+lower dimensionality than the input.
 
 %%% Local Variables: 
 %%% mode: latex

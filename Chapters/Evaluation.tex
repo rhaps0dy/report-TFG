@@ -156,34 +156,38 @@ annealing we used $\varepsilon=\textsc{Max}(0.7 - 3\cdot 10^{-5} \cdot n_e,
 0.1)$, where $n_e$ is the episode number. This encourages extra exploration at
 the beginning.
 
-The average reward over time can be seen in Figures \ref{fig:q-noopts-noanneal},
-\ref{fig:q-noopts-anneal}, \ref{fig:q-opts-noanneal} and
-\ref{fig:q-opts-anneal}. In each of those figures, at the left the reward
+The average reward over time can be seen in Figures \ref{fig:without_options} and
+\ref{fig:with_options}. In each of those figures, at the left the reward
 including the shaping reward is shown, and at the right the environment reward
 alone is shown.
 
 \newcommand{\drawtraining}[2]{
-\begin{figure}[hbtp]
+\begin{figure}[p]
 \begin{center}
-\includegraphics[width=\textwidth/2- 0.2cm]{img/#1-phi.pdf}
-\includegraphics[width=\textwidth/2- 0.2cm]{img/#1.pdf}
+%\includegraphics[width=\textwidth/2- 0.2cm]{img/#1-phi.pdf}
+%\includegraphics[width=\textwidth/2- 0.2cm]{img/#1.pdf}
+\includegraphics[scale=1]{img/sarsa/#1.pdf}
 \end{center}
 \caption{#2\label{fig:#1}}
 \end{figure}
 }
 
-\drawtraining{q-noopts-noanneal}{The reward over time, without options or
-annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
-\drawtraining{q-noopts-anneal}{The reward over time, without options, with
-annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
-\drawtraining{q-opts-noanneal}{The reward over time, with options but without
-annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
-\drawtraining{q-opts-anneal}{The reward over time, with options and with
-annealing. $y$ axis is reward, $x$ axis is thousands of episodes.}
+\drawtraining{without_options}{The reward per episode, averaged every 1000
+episodes, as the training progresses. No options are used. Blue uses
+annealing, red does not. Darker lines, with higher value,
+do not include the shaping reward $F(\cdot)$; lighter lines show the reward as
+the agent experiences it. $y$ axis is reward, $x$ axis is thousands of
+episodes.}
+\drawtraining{with_options}{The reward per episode, averaged every 1000
+episodes, as the training progresses. Options are used. Blue uses
+annealing, red does not. Darker lines, with higher value,
+do not include the shaping reward $F(\cdot)$; lighter lines show the reward as
+the agent experiences it. $y$ axis is reward, $x$ axis is thousands of
+episodes.}
 
-There is something odd about all the graphs. First, both graphs that do not use
-options (Figures \ref{fig:q-noopts-noanneal} and \ref{fig:q-noopts-anneal}),
-actually \emph{decrease} in accumulated reward during the first $\sim 25\,000$
+There is something odd about all the graphs. First, the graph that does not use
+options (Figure \ref{fig:without_options}),
+actually \emph{decreases} in accumulated reward during the first $\sim 25\,000$
 episodes. However, the accumulated reward without accounting for the shaping
 function is almost monotonically increasing. We suspect that the return in the
 starting state is also monotonically increasing, and it is the unique form of

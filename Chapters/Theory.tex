@@ -659,6 +659,7 @@ The Sarsa update looks like this (analogous to the Q-learning update from
 \citet[Section~3.2]{sutton1999between}):
 \begin{equation}
   Q(s_t, o_t) \gets (1-\alpha)Q(s_t, o_t) + \alpha \left[r_{t:t+k} + \gamma^k Q(s_{t+k}, o_{t+k}) \right]
+  \label{eq:options-q-update}
 \end{equation}
 Where $s_t$, $o_t$ are the currently selected state and option, $s_{t+k}$ and
 $o_{t+k}$ are the next selected state and option, and $k$ is the number of time

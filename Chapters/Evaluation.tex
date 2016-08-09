@@ -166,24 +166,22 @@ alone is shown.
 \begin{center}
 %\includegraphics[width=\textwidth/2- 0.2cm]{img/#1-phi.pdf}
 %\includegraphics[width=\textwidth/2- 0.2cm]{img/#1.pdf}
-\includegraphics[scale=1]{img/sarsa/#1.pdf}
+\includegraphics[width=\textwidth]{img/sarsa/#1.pdf}
 \end{center}
 \caption{#2\label{fig:#1}}
 \end{figure}
 }
 
-\drawtraining{without_options}{The reward per episode, averaged every 1000
+\drawtraining{without_options}{Reward per episode, averaged every 1000
 episodes, as the training progresses. No options are used. Blue uses
 annealing, red does not. Darker lines, with higher value,
 do not include the shaping reward $F(\cdot)$; lighter lines show the reward as
 the agent experiences it. $y$ axis is reward, $x$ axis is thousands of
 episodes.}
-\drawtraining{with_options}{The reward per episode, averaged every 1000
-episodes, as the training progresses. Options are used. Blue uses
-annealing, red does not. Darker lines, with higher value,
-do not include the shaping reward $F(\cdot)$; lighter lines show the reward as
-the agent experiences it. $y$ axis is reward, $x$ axis is thousands of
-episodes.}
+\drawtraining{with_options}{Reward per episode, averaged every 1000
+episodes, as the training progresses. Options are used. Meaning of each element is
+the same as in \ffref{fig:without_options}. Note that the two reward lines
+without shaping are overlapping at zero reward.}
 
 There is something odd about all the graphs. First, the graph that does not use
 options (Figure \ref{fig:without_options}),
